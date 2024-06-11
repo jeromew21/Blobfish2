@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include "chess.h"
 #include "bitboard_constants.h"
 #include "move_generation.h"
@@ -11,9 +12,42 @@
 
 typedef u32 (*bitscan_function)(u64);
 
+MoveList generate_all_pseudo_legal_moves(Board *board);
+
+u64 king_moves(u32 source_idx);
+
+u64 knight_moves(u32 source_idx);
+
 u64 bishop_moves(u32 source_idx, u64 occupancy_mask);
 
 u64 rook_moves(u32 source_idx, u64 occupancy_mask);
+
+u64 pawn_attacks(u64 source_bit, u32 side);
+
+//i32 num_attackers(u64 bitset, u64* bitboards);
+
+bool is_attacked(u64 bitset, const u64* bitboards, u32 attacking_color);
+
+/**
+ * In the future, we might generate unchecking moves separately.
+ */
+MoveList generate_all_legal_moves(Board *board) {
+    MoveList legal = move_list_create();
+    MoveList pseudo_legal = generate_all_pseudo_legal_moves(board);
+    const u64 king = board->_bitboard[board->_turn] & board->_bitboard[kKing];
+    for (int i = 0; i < pseudo_legal.count; i++) {
+        u64 bitboards[8];
+        for (int k = 0; k < 8; k++) { // could be memcpy instead
+            bitboards[k] = board->_bitboard[k];
+        }
+        Move mv = move_list_get(&pseudo_legal, i);
+        bitboards_update(bitboards, board->_turn, mv);
+        if (!is_attacked(king, bitboards, !board->_turn)) {
+            move_list_push(&legal, mv);
+        }
+    }
+    return legal;
+}
 
 MoveList generate_all_pseudo_legal_moves(Board *board) {
     MoveList move_list = move_list_create();
@@ -29,22 +63,23 @@ MoveList generate_all_pseudo_legal_moves(Board *board) {
     u64 knights = friendly_mask & board->_bitboard[kKnight];
     while (knights) {
         const u32 idx = bitscan_forward(knights);
-        u64 jumps = BITBOARD_KNIGHT_ATTACKS[idx] & ~friendly_mask;
+        u64 jumps = knight_moves(idx) & ~friendly_mask;
         while (jumps) {
             const u32 dest_idx = bitscan_forward(jumps);
             const u64 dest_bit = (u64) 1 << dest_idx;
-            jumps ^= dest_bit;
             const u32 md = (dest_bit & enemy_mask) ? kCaptureMove : kQuietMove;
             const Move mv = move_create(idx, dest_idx, md);
             move_list_push(&move_list, mv);
+            jumps ^= dest_bit;
         }
         knights ^= (u64) 1 << idx;
     }
     // Castling
     // TODO: generalized, 960 castling the rule is there's a king target square for all positions
+    // Since castling is defined where the DEST of king+rook is constant, we could encode the original king-original rook pos.
     const u64 king = friendly_mask & board->_bitboard[kKing];
     if (king) {
-        BoardMetadata *md = board_metadata_peek(board);
+        BoardMetadata *md = board_metadata_peek(board, 0);
         const u32 castling_rights = board_metadata_get_castling_rights(md);
         if ((board->_turn == kWhite && !(castling_rights & kWhiteKingSideFlag)) ||
             (board->_turn == kBlack && !(castling_rights & kBlackKingSideFlag))) {
@@ -53,10 +88,10 @@ MoveList generate_all_pseudo_legal_moves(Board *board) {
             const u64 king_squares = king | (king << 1) | (king << 2); // these must all not be attacked
             const u64 must_be_empty_squares = king ^ king_squares;
             if (!(must_be_empty_squares & occupancy_mask)) {
-                // Should we push the rook instead of the king?
-                // Or even encode something entirely different?
-                const Move mv = move_create(bitscan_forward(king), king_dest, kKingSideCastleMove);
-                move_list_push(&move_list, mv);
+                if (!is_attacked(king_squares, board->_bitboard, !board->_turn)) {
+                    const Move mv = move_create(bitscan_forward(king), king_dest, kKingSideCastleMove);
+                    move_list_push(&move_list, mv);
+                }
             }
         }
         if ((board->_turn == kWhite && !(castling_rights & kWhiteQueenSideFlag)) ||
@@ -66,8 +101,10 @@ MoveList generate_all_pseudo_legal_moves(Board *board) {
             const u64 king_squares = king | (king >> 1) | (king >> 2);
             const u64 must_be_empty_squares = king ^ (king_squares | (king >> 3));
             if (!(must_be_empty_squares & occupancy_mask)) {
-                const Move mv = move_create(bitscan_forward(king), king_dest, kKingSideCastleMove);
-                move_list_push(&move_list, mv);
+                if (!is_attacked(king_squares, board->_bitboard, !board->_turn)) {
+                    const Move mv = move_create(bitscan_forward(king), king_dest, kQueenSideCastleMove);
+                    move_list_push(&move_list, mv);
+                }
             }
         }
     }
@@ -75,25 +112,24 @@ MoveList generate_all_pseudo_legal_moves(Board *board) {
     // Same note as for Knights w.r.t. optimization
     if (king) { // technically this check isn't needed for legal positions
         const u32 king_idx = bitscan_forward(king);
-        u64 king_moves = BITBOARD_KING_ATTACKS[king_idx] & ~friendly_mask;
-        while (king_moves) {
-            const u32 dest_idx = bitscan_forward(king_moves);
+        u64 king_move_bitset = king_moves(king_idx) & ~friendly_mask;
+        while (king_move_bitset) {
+            const u32 dest_idx = bitscan_forward(king_move_bitset);
             const u64 dest_bit = (u64) 1 << dest_idx;
-            king_moves ^= dest_bit;
             const u32 md = (dest_bit & enemy_mask) ? kCaptureMove : kQuietMove;
             const Move mv = move_create(king_idx, dest_idx, md);
             move_list_push(&move_list, mv);
+            king_move_bitset ^= dest_bit;
         }
     }
     // Pawns
-    // TODO: en passant
     // TODO: promotions
     const u64 pawns = friendly_mask & board->_bitboard[kPawn];
     if (pawns) {
         const u64 empty_mask = ~occupancy_mask;
         const u64 not_a_file = ~0x0101010101010101;
         const u64 not_h_file = ~0x8080808080808080;
-        const u64 en_passant_square = (u64) 1 << board_metadata_get_en_passant_square(board_metadata_peek(board));
+        const u64 en_passant_square = (u64) 1 << board_metadata_get_en_passant_square(board_metadata_peek(board, 0));
         u64 pawn_east_attacks;
         u64 pawn_west_attacks;
         u64 pawn_jumps_single;
@@ -124,33 +160,33 @@ MoveList generate_all_pseudo_legal_moves(Board *board) {
             const u32 dest_idx = bitscan_forward(pawn_east_attacks);
             const u32 src_idx = dest_idx + east_offset;
             const u64 dest_bit = (u64) 1 << dest_idx;
-            pawn_east_attacks ^= dest_bit;
             u32 flags = (dest_bit & en_passant_square) ? kEnPassantMove : kCaptureMove;
             const Move mv = move_create(src_idx, dest_idx, flags);
             move_list_push(&move_list, mv);
+            pawn_east_attacks ^= dest_bit;
         }
         while (pawn_west_attacks) {
             const u32 dest_idx = bitscan_forward(pawn_west_attacks);
             const u32 src_idx = dest_idx + west_offset;
             const u64 dest_bit = (u64) 1 << dest_idx;
-            pawn_west_attacks ^= dest_bit;
             u32 flags = (dest_bit & en_passant_square) ? kEnPassantMove : kCaptureMove;
             const Move mv = move_create(src_idx, dest_idx, flags);
             move_list_push(&move_list, mv);
+            pawn_west_attacks ^= dest_bit;
         }
         while (pawn_jumps_single) {
             const u32 dest_idx = bitscan_forward(pawn_jumps_single);
             const u32 src_idx = dest_idx + pawn_jump_offset;
-            pawn_jumps_single ^= (u64) 1 << dest_idx;
             const Move mv = move_create(src_idx, dest_idx, 0);
             move_list_push(&move_list, mv);
+            pawn_jumps_single ^= (u64) 1 << dest_idx;
         }
         while (pawn_double_push_destinations) {
             const u32 dest_idx = bitscan_forward(pawn_double_push_destinations);
             const u32 src_idx = dest_idx + pawn_jump_offset + pawn_jump_offset;
-            pawn_double_push_destinations ^= (u64) 1 << dest_idx;
             const Move mv = move_create(src_idx, dest_idx, kDoublePawnMove);
             move_list_push(&move_list, mv);
+            pawn_double_push_destinations ^= (u64) 1 << dest_idx;
         }
     }
     u64 bishops = friendly_mask & (board->_bitboard[kBishop] | board->_bitboard[kQueen]);
@@ -160,10 +196,10 @@ MoveList generate_all_pseudo_legal_moves(Board *board) {
         while (destinations) {
             const u32 dest_idx = bitscan_forward(destinations);
             const u64 dest_bit = (u64) 1 << dest_idx;
-            destinations ^= dest_bit;
             const u32 md = (dest_bit & enemy_mask) ? kCaptureMove : kQuietMove;
             const Move mv = move_create(src_idx, dest_idx, md);
             move_list_push(&move_list, mv);
+            destinations ^= dest_bit;
         }
         bishops ^= (u64) 1 << src_idx;
     }
@@ -174,14 +210,69 @@ MoveList generate_all_pseudo_legal_moves(Board *board) {
         while (destinations) {
             const u32 dest_idx = bitscan_forward(destinations);
             const u64 dest_bit = (u64) 1 << dest_idx;
-            destinations ^= dest_bit;
             const u32 md = (dest_bit & enemy_mask) ? kCaptureMove : kQuietMove;
             const Move mv = move_create(src_idx, dest_idx, md);
             move_list_push(&move_list, mv);
+            destinations ^= dest_bit;
         }
         rooks ^= (u64) 1 << src_idx;
     }
     return move_list;
+}
+
+/**
+ * Check if the squares marked by bitset are attacked by any pieces of attacking_color.
+ * Should be more efficient than an attacker count, due to possibility of early return.
+ */
+bool is_attacked(u64 bitset, const u64* bitboards, u32 attacking_color) {
+    const u64 occupancy_mask = bitboards[kWhite] | bitboards[kBlack];
+    const u64 enemy_mask = bitboards[attacking_color];
+    while (bitset) {
+        u32 target_idx = bitscan_forward(bitset);
+        u64 target_bit = (u64) 1 << target_idx;
+        // Sliding pieces
+        if (bishop_moves(target_idx, occupancy_mask) & enemy_mask & (bitboards[kBishop] | bitboards[kQueen])) {
+            return true;
+        }
+        if (rook_moves(target_idx, occupancy_mask) & enemy_mask & (bitboards[kRook] | bitboards[kQueen])) {
+            return true;
+        }
+        // Knight
+        if (knight_moves(target_idx) & enemy_mask & bitboards[kKnight]) {
+            return true;
+        }
+        // King
+        if (king_moves(target_idx) & enemy_mask & bitboards[kKnight]) {
+            return true;
+        }
+        // Pawn
+        if (pawn_attacks(target_bit, !enemy_mask) & enemy_mask & bitboards[kPawn]) {
+            return true;
+        }
+        bitset ^= target_bit;
+    }
+    return false;
+}
+
+/**
+ * note this requires bitset instead of flat index
+ */
+u64 pawn_attacks(u64 source_bit, u32 side) {
+    const u64 not_a_file = ~0x010101101010101;
+    const u64 not_h_file = ~0x8080808080808080;
+    if (side == kWhite) {
+        return ((source_bit << 9) & not_a_file) | ((source_bit << 7) & not_h_file);
+    } else {
+        return ((source_bit >> 7) & not_a_file) | ((source_bit >> 9) & not_h_file);
+    }
+}
+
+u64 king_moves(u32 source_idx) {
+    return BITBOARD_KING_ATTACKS[source_idx];
+}
+
+u64 knight_moves(u32 source_idx) {
+    return BITBOARD_KNIGHT_ATTACKS[source_idx];
 }
 
 u64 bishop_moves(u32 source_idx, u64 occupancy_mask) {

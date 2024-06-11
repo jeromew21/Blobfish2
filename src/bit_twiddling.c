@@ -3,7 +3,9 @@
 // note that this isn't defined on MSVC
 // there might be a different builtin somewhere
 // there is a way to drop into assembly but idk if that's a good idea
-// https://www.chessprogramming.org/BitScan#x86
+/**
+ * https://www.chessprogramming.org/BitScan#x86
+ */
 u32 bitscan_forward(u64 bitset)
 {
     return __builtin_ffsll(bitset) - 1;

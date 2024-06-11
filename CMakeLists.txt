@@ -5,6 +5,7 @@ project(Blobfish
 add_executable(blobfish
         src/bit_twiddling.c
         src/fen_parse.c
+        src/debug.c
         src/move.c
         src/move_generation.c
         src/move_list.c

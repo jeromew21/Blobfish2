@@ -68,6 +68,8 @@ typedef struct Board {
     u64 _bitboard[8];
     i32 _turn;
     i32 _ply;
+    u64 _rook_start_positions;
+    u64 _king_start_positions;
     BoardMetadata _initial_state;
     BoardMetadata _state_stack[MAX_BOARD_STACK_DEPTH];
 } Board;
@@ -142,11 +144,15 @@ void move_list_push(MoveList *list, Move mv);
 
 /* Move Generation */
 
-MoveList generate_all_pseudo_legal_moves(Board *board);
+//MoveList generate_all_pseudo_legal_moves(Board *board);
+
+MoveList generate_all_legal_moves(Board *board);
+
+void bitboards_update(u64 *bitboards, i32 turn, Move mv);
 
 /* Board Metadata */
 
-BoardMetadata *board_metadata_peek(Board *board);
+BoardMetadata *board_metadata_peek(Board *board, int i);
 
 void board_metadata_set_en_passant_square(BoardMetadata *md, u32 ep_square);
 

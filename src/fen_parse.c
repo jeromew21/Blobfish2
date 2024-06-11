@@ -16,6 +16,13 @@ void halfmove_clock(Board *board, const char *fen, int *i);
 void fullmove_counter(Board *board, const char *fen, int *i);
 
 /**
+ * Create board with basic start position.
+ */
+Board *board_default_starting_position() {
+    return board_from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+}
+
+/**
  * https://www.chessprogramming.org/Forsyth-Edwards_Notation
  * TODO: upgrade to Shredder-FEN for 960 support
  * TODO: catch parse errors
@@ -23,6 +30,8 @@ void fullmove_counter(Board *board, const char *fen, int *i);
  */
 Board *board_from_fen(const char *fen) {
     Board *board = calloc(1, sizeof(Board));
+    board->_rook_start_positions = 0x8100000000000081;
+    board->_king_start_positions = 0x1000000000000010;
     int i = 0;
     piece_placement(board, fen, &i);
     side_to_move(board, fen, &i);
@@ -140,7 +149,7 @@ void side_to_move(Board *board, const char *fen, int *i) {
 }
 
 void castling(Board *board, const char *fen, int *i) {
-    BoardMetadata *md = board_metadata_peek(board);
+    BoardMetadata *md = board_metadata_peek(board, 0);
     u32 rights = 0xf;
     while (1) {
         const char c = fen[*i];
@@ -162,9 +171,9 @@ void castling(Board *board, const char *fen, int *i) {
 }
 
 void en_passant(Board *board, const char *fen, int *i) {
-    BoardMetadata *md = board_metadata_peek(board);
-    char file_letter;
-    char rank_number;
+    BoardMetadata *md = board_metadata_peek(board, 0);
+    char file_letter = 0;
+    char rank_number = 0;
     while (1) {
         const char c = fen[*i];
         if (c >= 97 && c <= 104) {
@@ -172,11 +181,12 @@ void en_passant(Board *board, const char *fen, int *i) {
         } else if (c >= 49 && c <= 56) {
             rank_number = c;
         } else if (c == ' ') {
-            (*i++);
+            (*i)++;
             break;
         }
         (*i)++;
     }
+    if (file_letter == 0 || rank_number == 0) return;
     int col = file_letter - 97;
     int row = rank_number - 49;
     board_metadata_set_en_passant_square(md, row*8 + col);
