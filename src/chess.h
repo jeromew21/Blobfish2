@@ -35,15 +35,27 @@ enum Piece {
 };
 
 /**
+ * 0b0000 means you are allowed to castle (with legal castling board state; i.e. king and rook haven't moved yet).
+ * 1 in any slot means it's not allowed.
+ */
+enum CastlingRights {
+    kWhiteKingSideFlag  = 0b0001,
+    kWhiteQueenSideFlag = 0b0010,
+    kBlackKingSideFlag  = 0b0100,
+    kBlackQueenSideFlag = 0b1000,
+};
+
+/**
  * These are stored in the stack.
  * We really want to shrink the size of this for ease of use.
  * Looks like we could make it a single 32-bit integer.
  */
 typedef struct BoardMetadata {
     Move _last_move; // 16 bits for now
-    i32 _en_passant_square; // 8 bits?
-    i32 _captured_piece; // 4 bits indexing into bitboard ?
-    uint8_t _castling_rights[4]; // should be a 4-bit field
+    uint16_t  _state_data;
+//    i32 _en_passant_square; // 8 bits?
+//    i32 _captured_piece; // 4 bits indexing into bitboard ?
+//    uint8_t _castling_rights[4]; // should be a 4-bit field
 } BoardMetadata;
 
 /**
@@ -55,17 +67,24 @@ typedef struct Board {
     u64 _bitboard[8];
     i32 _turn;
     i32 _ply;
+    BoardMetadata _initial_state;
     BoardMetadata _state_stack[MAX_BOARD_STACK_DEPTH];
 } Board;
 
 /**
  * These values make up the top 4 bits of a Move, encoding special move types.
  * I'm pretty sure that in my previous engines I didn't encode Capture, but there might be some utility here to do so.
+ * Captures end up having a bit flag with this encoding.
+ * https://www.chessprogramming.org/Encoding_Moves
  */
 enum MoveMetadata {
     kQuietMove,
-    kCaptureMove,
     kDoublePawnMove,
+    kKingSideCastleMove,
+    kQueenSideCastleMove,
+    kCaptureMove,
+    kEnPassantMove,
+    // TODO: underpromotions
 };
 
 /**
@@ -123,6 +142,28 @@ void move_list_push(MoveList *list, Move mv);
 /* Move Generation */
 
 MoveList generate_all_pseudo_legal_moves(Board* board);
+
+/* Board Metadata */
+
+BoardMetadata *board_metadata_peek(Board* board);
+
+void board_metadata_set_en_passant_square(BoardMetadata *md, u32 ep_square);
+
+void board_metadata_set_captured_piece(BoardMetadata *md, u32 captured_piece);
+
+void board_metadata_set_castling_rights(BoardMetadata *md, u32 rights);
+
+u32 board_metadata_get_en_passant_square(BoardMetadata *md);
+
+u32 board_metadata_get_captured_piece(BoardMetadata *md);
+
+u32 board_metadata_get_castling_rights(BoardMetadata *md);
+
+/* Board construction */
+
+Board *board_default_starting_position();
+
+Board *board_from_fen(const char* fen);
 
 /* Board Modifiers*/
 

@@ -12,9 +12,10 @@
 typedef u32 (*bitscan_function)(u64);
 
 u64 bishop_moves(u32 source_idx, u64 occupancy_mask);
+
 u64 rook_moves(u32 source_idx, u64 occupancy_mask);
 
-MoveList generate_all_pseudo_legal_moves(Board* board) {
+MoveList generate_all_pseudo_legal_moves(Board *board) {
     MoveList move_list = move_list_create();
     const u64 friendly_mask = board->_bitboard[board->_turn];
     const u64 enemy_mask = board->_bitboard[!board->_turn];
@@ -27,7 +28,7 @@ MoveList generate_all_pseudo_legal_moves(Board* board) {
     // must measure
     u64 knights = friendly_mask & board->_bitboard[kKnight];
     while (knights) {
-        const u32 idx = bitscan_forward(knights);        
+        const u32 idx = bitscan_forward(knights);
         u64 jumps = BITBOARD_KNIGHT_ATTACKS[idx] & ~friendly_mask;
         while (jumps) {
             const u32 dest_idx = bitscan_forward(jumps);
@@ -39,10 +40,39 @@ MoveList generate_all_pseudo_legal_moves(Board* board) {
         }
         knights ^= (u64) 1 << idx;
     }
-    // King
-    // TODO: castling
-    // Same note as for Knights w.r.t. optimization
+    // Castling
+    // TODO: generalized, 960 castling the rule is there's a king target square for all positions
     const u64 king = friendly_mask & board->_bitboard[kKing];
+    if (king) {
+        BoardMetadata *md = board_metadata_peek(board);
+        const u32 castling_rights = board_metadata_get_castling_rights(md);
+        if ((board->_turn == kWhite && !(castling_rights & kWhiteKingSideFlag)) ||
+            (board->_turn == kBlack && !(castling_rights & kBlackKingSideFlag))) {
+            const u32 king_dest = board->_turn == kWhite ? 6 : 62;
+            // 960: need to fix this
+            const u64 king_squares = king | (king << 1) | (king << 2); // these must all not be attacked
+            const u64 must_be_empty_squares = king ^ king_squares;
+            if (!(must_be_empty_squares & occupancy_mask)) {
+                // Should we push the rook instead of the king?
+                // Or even encode something entirely different?
+                const Move mv = move_create(bitscan_forward(king), king_dest, kKingSideCastleMove);
+                move_list_push(&move_list, mv);
+            }
+        }
+        if ((board->_turn == kWhite && !(castling_rights & kWhiteQueenSideFlag)) ||
+            (board->_turn == kBlack && !(castling_rights & kBlackQueenSideFlag))) {
+            const u32 king_dest = board->_turn == kWhite ? 2 : 58;
+            // 960: need to fix this
+            const u64 king_squares = king | (king >> 1) | (king >> 2);
+            const u64 must_be_empty_squares = king ^ (king_squares | (king >> 3));
+            if (!(must_be_empty_squares & occupancy_mask)) {
+                const Move mv = move_create(bitscan_forward(king), king_dest, kKingSideCastleMove);
+                move_list_push(&move_list, mv);
+            }
+        }
+    }
+    // King
+    // Same note as for Knights w.r.t. optimization
     if (king) { // technically this check isn't needed for legal positions
         const u32 king_idx = bitscan_forward(king);
         u64 king_moves = BITBOARD_KING_ATTACKS[king_idx] & ~friendly_mask;
@@ -52,54 +82,60 @@ MoveList generate_all_pseudo_legal_moves(Board* board) {
             king_moves ^= dest_bit;
             const u32 md = (dest_bit & enemy_mask) ? kCaptureMove : kQuietMove;
             const Move mv = move_create(king_idx, dest_idx, md);
-            //move_list_push(&move_list, mv);
+            move_list_push(&move_list, mv);
         }
     }
     // Pawns
     // TODO: en passant
+    // TODO: promotions
     const u64 pawns = friendly_mask & board->_bitboard[kPawn];
     if (pawns) {
         const u64 empty_mask = ~occupancy_mask;
         const u64 not_a_file = ~0x0101010101010101;
         const u64 not_h_file = ~0x8080808080808080;
+        const u64 en_passant_square = (u64) 1 << board_metadata_get_en_passant_square(board_metadata_peek(board));
         u64 pawn_east_attacks;
         u64 pawn_west_attacks;
         u64 pawn_jumps_single;
-        u64 pawn_double_push_sources; // locations of pawns that can double push
+        u64 pawn_double_push_destinations; // locations of pawns that can double push
         u32 east_offset;
         u32 west_offset;
         u32 pawn_jump_offset;
         if (board->_turn == kWhite) {
             const u64 fourth_rank = 0x00000000FF000000;
-            pawn_east_attacks = ((pawns << 9) & not_a_file) & enemy_mask;
-            pawn_west_attacks = ((pawns << 7) & not_h_file) & enemy_mask;
+            pawn_east_attacks = ((pawns << 9) & not_a_file) & (en_passant_square | enemy_mask);
+            pawn_west_attacks = ((pawns << 7) & not_h_file) & (en_passant_square | enemy_mask);
             pawn_jumps_single = (pawns << 8) & empty_mask;
             east_offset = -9;
             west_offset = -7;
             pawn_jump_offset = -8;
-            pawn_double_push_sources = (pawn_jumps_single << 8) & empty_mask & fourth_rank;
+            pawn_double_push_destinations = (pawn_jumps_single << 8) & empty_mask & fourth_rank;
         } else {
             const u64 fifth_rank = 0x000000FF00000000;
-            pawn_east_attacks = ((pawns >> 7) & not_a_file) & enemy_mask;
-            pawn_west_attacks = ((pawns >> 9) & not_h_file) & enemy_mask;
+            pawn_east_attacks = ((pawns >> 7) & not_a_file) & (en_passant_square | enemy_mask);
+            pawn_west_attacks = ((pawns >> 9) & not_h_file) & (en_passant_square | enemy_mask);
             east_offset = 7;
             west_offset = 9;
             pawn_jump_offset = 8;
             pawn_jumps_single = (pawns >> 8) & empty_mask;
-            pawn_double_push_sources = (pawn_jumps_single >> 8) & empty_mask & fifth_rank;
+            pawn_double_push_destinations = (pawn_jumps_single >> 8) & empty_mask & fifth_rank;
         }
         while (pawn_east_attacks) {
             const u32 dest_idx = bitscan_forward(pawn_east_attacks);
             const u32 src_idx = dest_idx + east_offset;
-            pawn_east_attacks ^= (u64) 1 << dest_idx;
-            const Move mv = move_create(src_idx, dest_idx, kCaptureMove);
+            const u64 dest_bit = (u64) 1 << dest_idx;
+            pawn_east_attacks ^= dest_bit;
+            u32 flags = (dest_bit & en_passant_square) ? kEnPassantMove : kCaptureMove;
+            const Move mv = move_create(src_idx, dest_idx, flags);
             move_list_push(&move_list, mv);
         }
         while (pawn_west_attacks) {
             const u32 dest_idx = bitscan_forward(pawn_west_attacks);
             const u32 src_idx = dest_idx + west_offset;
-            pawn_west_attacks ^= (u64) 1 << dest_idx;
-            const Move mv = move_create(src_idx, dest_idx, kCaptureMove);
+            const u64 dest_bit = (u64) 1 << dest_idx;
+            pawn_west_attacks ^= dest_bit;
+            u32 flags = (dest_bit & en_passant_square) ? kEnPassantMove : kCaptureMove;
+            const Move mv = move_create(src_idx, dest_idx, flags);
             move_list_push(&move_list, mv);
         }
         while (pawn_jumps_single) {
@@ -109,10 +145,10 @@ MoveList generate_all_pseudo_legal_moves(Board* board) {
             const Move mv = move_create(src_idx, dest_idx, 0);
             move_list_push(&move_list, mv);
         }
-        while (pawn_double_push_sources) {
-            const u32 src_idx = bitscan_forward(pawn_double_push_sources);
-            const u32 dest_idx = src_idx - pawn_jump_offset - pawn_jump_offset;
-            pawn_double_push_sources ^= (u64) 1 << src_idx;
+        while (pawn_double_push_destinations) {
+            const u32 dest_idx = bitscan_forward(pawn_double_push_destinations);
+            const u32 src_idx = dest_idx + pawn_jump_offset + pawn_jump_offset;
+            pawn_double_push_destinations ^= (u64) 1 << dest_idx;
             const Move mv = move_create(src_idx, dest_idx, kDoublePawnMove);
             move_list_push(&move_list, mv);
         }
@@ -134,7 +170,7 @@ MoveList generate_all_pseudo_legal_moves(Board* board) {
     u64 rooks = friendly_mask & (board->_bitboard[kRook] | board->_bitboard[kQueen]);
     while (rooks) {
         const u32 src_idx = bitscan_forward(rooks);
-        u64 destinations = bishop_moves(src_idx, occupancy_mask) & ~friendly_mask;
+        u64 destinations = rook_moves(src_idx, occupancy_mask) & ~friendly_mask;
         while (destinations) {
             const u32 dest_idx = bitscan_forward(destinations);
             const u64 dest_bit = (u64) 1 << dest_idx;
@@ -155,8 +191,7 @@ u64 bishop_moves(u32 source_idx, u64 occupancy_mask) {
         const u64 ray = BITBOARD_BISHOP_RAYS[direction][source_idx];
         const u64 overlaps = ray & occupancy_mask;
         result |= ray;
-        if (overlaps)
-        {
+        if (overlaps) {
             result &= ~(BITBOARD_BISHOP_RAYS[direction][bitscan_fns[direction](overlaps)]);
         }
     }
@@ -170,8 +205,7 @@ u64 rook_moves(u32 source_idx, u64 occupancy_mask) {
         const u64 ray = BITBOARD_ROOK_RAYS[direction][source_idx];
         const u64 overlaps = ray & occupancy_mask;
         result |= ray;
-        if (overlaps)
-        {
+        if (overlaps) {
             result &= ~(BITBOARD_ROOK_RAYS[direction][bitscan_fns[direction](overlaps)]);
         }
     }

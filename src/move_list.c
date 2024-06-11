@@ -15,5 +15,5 @@ void move_list_push(MoveList *list, Move mv) {
 }
  
 void move_list_destroy(MoveList *list) {
-
+    // not needed yet
 }
