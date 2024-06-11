@@ -122,7 +122,6 @@ MoveList generate_all_pseudo_legal_moves(Board *board) {
         }
     }
     // Pawns
-    // TODO: promotions
     const u64 pawns = friendly_mask & board->_bitboard[kPawn];
     if (pawns) {
         const u64 empty_mask = ~occupancy_mask;
@@ -137,7 +136,7 @@ MoveList generate_all_pseudo_legal_moves(Board *board) {
         u64 pawn_double_push_destinations; // locations of pawns that can double push
         i32 east_offset;
         i32 west_offset;
-        u32 pawn_jump_offset;
+        i32 pawn_jump_offset;
         if (board->_turn == kWhite) {
             const u64 fourth_rank = 0x00000000FF000000;
             pawn_east_attacks = ((pawns << 9) & not_a_file) & (en_passant_square | enemy_mask);
@@ -189,7 +188,7 @@ MoveList generate_all_pseudo_legal_moves(Board *board) {
         }
         while (pawn_jumps_single) {
             const u32 dest_idx = bitscan_forward(pawn_jumps_single);
-            const u32 src_idx = dest_idx + pawn_jump_offset;
+            const u32 src_idx = ((i32)dest_idx) + pawn_jump_offset;
             const u64 dest_bit = (u64) 1 << dest_idx;
             if (dest_bit & last_rank) {
                 move_list_push(&move_list, move_create(src_idx, dest_idx, kQueenPromotionMove));
@@ -203,7 +202,7 @@ MoveList generate_all_pseudo_legal_moves(Board *board) {
         }
         while (pawn_double_push_destinations) {
             const u32 dest_idx = bitscan_forward(pawn_double_push_destinations);
-            const u32 src_idx = dest_idx + pawn_jump_offset + pawn_jump_offset;
+            const u32 src_idx = ((i32)dest_idx) + pawn_jump_offset + pawn_jump_offset;
             const Move mv = move_create(src_idx, dest_idx, kDoublePawnMove);
             move_list_push(&move_list, mv);
             pawn_double_push_destinations ^= (u64) 1 << dest_idx;
@@ -248,25 +247,21 @@ bool is_attacked(u64 bitset, const u64* bitboards, u32 attacking_color) {
     const u64 occupancy_mask = bitboards[kWhite] | bitboards[kBlack];
     const u64 enemy_mask = bitboards[attacking_color];
     while (bitset) {
-        u32 target_idx = bitscan_forward(bitset);
-        u64 target_bit = (u64) 1 << target_idx;
-        // Sliding pieces
+        const u32 target_idx = bitscan_forward(bitset);
+        const u64 target_bit = (u64) 1 << target_idx;
         if (bishop_moves(target_idx, occupancy_mask) & enemy_mask & (bitboards[kBishop] | bitboards[kQueen])) {
             return true;
         }
         if (rook_moves(target_idx, occupancy_mask) & enemy_mask & (bitboards[kRook] | bitboards[kQueen])) {
             return true;
         }
-        // Knight
         if (knight_moves(target_idx) & (enemy_mask & bitboards[kKnight])) {
             return true;
         }
-        // King
         if (king_moves(target_idx) & enemy_mask & bitboards[kKing]) {
             return true;
         }
-        // Pawn
-        if (pawn_attacks(target_bit, !enemy_mask) & enemy_mask & bitboards[kPawn]) {
+        if (pawn_attacks(target_bit, !attacking_color) & enemy_mask & bitboards[kPawn]) {
             return true;
         }
         bitset ^= target_bit;
@@ -278,7 +273,7 @@ bool is_attacked(u64 bitset, const u64* bitboards, u32 attacking_color) {
  * note this requires bitset instead of flat index
  */
 u64 pawn_attacks(u64 source_bit, u32 side) {
-    const u64 not_a_file = ~0x010101101010101;
+    const u64 not_a_file = ~0x0101010101010101;
     const u64 not_h_file = ~0x8080808080808080;
     if (side == kWhite) {
         return ((source_bit << 9) & not_a_file) | ((source_bit << 7) & not_h_file);

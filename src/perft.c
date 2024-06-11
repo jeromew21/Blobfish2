@@ -18,7 +18,17 @@ bool comp_bitboards(u64* b1, u64*b2, int *out_which) {
     return true;
 }
 
-PerftResults perft(Board *board, int depth)
+void perft_test_from_file(const char* filename) {
+
+}
+
+PerftResults perft_helper(Board *board, int depth, int top_depth);
+
+PerftResults perft(Board *board, int depth) {
+    return perft_helper(board, depth, depth);
+}
+
+PerftResults perft_helper(Board *board, int depth, int top_depth)
 {
     PerftResults r;
     if (depth == 0) {
@@ -39,6 +49,7 @@ PerftResults perft(Board *board, int depth)
     copy_bitboard(copy_board, board->_bitboard);
     for (int i = 0; i < moves.count; i++) {
         Move mv = move_list_get(&moves, i);
+
         u32 move_md = move_get_metadata(mv);
         if (move_md & kCaptureMove) {
             r.captures++;
@@ -49,6 +60,9 @@ PerftResults perft(Board *board, int depth)
         if (move_md == kQueenSideCastleMove || move_md == kKingSideCastleMove) {
             r.castles++;
         }
+        if (move_md & 0b1000) {
+            r.promotions++;
+        }
         u64 dest = move_get_dest(mv);
         if (dest & board->_bitboard[kKing]) {
             char buf[69];
@@ -58,7 +72,12 @@ PerftResults perft(Board *board, int depth)
             exit(69);
         }
         make_move(board, mv);
-        PerftResults sub_results = perft(board, depth - 1);
+        PerftResults sub_results = perft_helper(board, depth - 1, top_depth);
+//        if (depth == top_depth) {
+//            char buf[69];
+//            move_to_string(mv, buf);
+//            printf("%s: %llu\n", buf, sub_results.nodes);
+//        }
         r.nodes += sub_results.nodes;
         r.captures += sub_results.captures;
         r.ep += sub_results.ep;
@@ -73,8 +92,8 @@ PerftResults perft(Board *board, int depth)
             move_to_string(mv, buf);
             printf("Move: %s\n", buf);
             printf("Move md: %x\n", move_get_metadata(mv));
-            dump_bitboard(copy_board);
-            dump_bitboard(board->_bitboard);
+            dump_u64(copy_board[which]);
+            dump_u64(board->_bitboard[which]);
             exit(69);
         }
     }

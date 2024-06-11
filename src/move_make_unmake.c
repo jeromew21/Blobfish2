@@ -71,13 +71,16 @@ void bitboards_update(u64 *bitboards, i32 turn, Move mv) {
             bitboards[kRook] |= dest;
         }
     } else if (move_metadata == kKingSideCastleMove || move_metadata == kQueenSideCastleMove) {
+        const u64 rank1 = 0x00000000000000FF;
+        const u64 rank8 = 0xFF00000000000000;
+        const u64 rank = turn == kWhite ? rank1 : rank8;
         u64 rook_src;
         u64 rook_dest;
         if (move_metadata == kKingSideCastleMove) {
-            rook_src = (u64) 1 << bitscan_reverse(bitboards[kRook] & bitboards[turn]);
+            rook_src = (u64) 1 << bitscan_reverse(bitboards[kRook] & bitboards[turn] & rank);
             rook_dest = dest >> 1;
         } else {
-            rook_src = (u64) 1 << bitscan_forward(bitboards[kRook] & bitboards[turn]);
+            rook_src = (u64) 1 << bitscan_forward(bitboards[kRook] & bitboards[turn] & rank);
             rook_dest = dest << 1;
         }
         bitboards[turn] &= ~(src | rook_src);
@@ -132,7 +135,11 @@ void make_move(Board *board, Move mv) {
         castling_rights |= king_side_flag;
         castling_rights |= queen_side_flag;
     }
-    if (board->_bitboard[kRook] & src & board->_rook_start_positions) {
+    const u64 rank1 = 0x00000000000000FF;
+    const u64 rank8 = 0xFF00000000000000;
+    const u64 friendly_back_rank = board->_turn == kWhite ? rank1 : rank8;
+    const u64 enemy_back_rank = board->_turn == kBlack ? rank1 : rank8;
+    if (board->_bitboard[kRook] & src & board->_rook_start_positions & friendly_back_rank) {
         const u32 src_idx = move_get_src_u32(mv);
         const u32 king_idx = bitscan_forward(board->_bitboard[kKing] & board->_bitboard[board->_turn]);
         if (src_idx < king_idx) {
@@ -141,7 +148,7 @@ void make_move(Board *board, Move mv) {
             castling_rights |= king_side_flag;
         }
     }
-    if (board->_bitboard[kRook] & dest & board->_rook_start_positions) {
+    if (board->_bitboard[kRook] & dest & board->_rook_start_positions & enemy_back_rank) {
         const u32 enemy_king_side_flag = board->_turn == kBlack ? kWhiteKingSideFlag : kBlackKingSideFlag;
         const u32 enemy_queen_side_flag = board->_turn == kBlack ? kWhiteQueenSideFlag : kBlackQueenSideFlag;
         const u32 dest_idx = move_get_dest_u32(mv);
