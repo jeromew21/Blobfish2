@@ -26,20 +26,24 @@ Board *board_default_starting_position() {
  * https://www.chessprogramming.org/Forsyth-Edwards_Notation
  * TODO: upgrade to Shredder-FEN for 960 support
  * TODO: catch parse errors
- * TODO: the other direction?
+ * TODO: the other direction, board->fen
  */
 Board *board_from_fen(const char *fen) {
     Board *board = calloc(1, sizeof(Board));
     board->_rook_start_positions = 0x8100000000000081;
     board->_king_start_positions = 0x1000000000000010;
     int i = 0;
-    piece_placement(board, fen, &i);
-    side_to_move(board, fen, &i);
-    castling(board, fen, &i);
-    en_passant(board, fen, &i);
-    halfmove_clock(board, fen, &i);
-    fullmove_counter(board, fen, &i);
+    fen_parse(board, fen, &i);
     return board;
+}
+
+void fen_parse(Board* board, const char* fen, int *i) {
+    piece_placement(board, fen, i);
+    side_to_move(board, fen, i);
+    castling(board, fen, i);
+    en_passant(board, fen, i);
+    halfmove_clock(board, fen, i);
+    fullmove_counter(board, fen, i);
 }
 
 void piece_placement(Board *board, const char *fen, int *i) {

@@ -129,7 +129,11 @@ void dump_bitboard(u64 *bitboards);
 
 void move_to_string(Move mv, char *buf);
 
+/* Testing */
+
 PerftResults perft(Board *board, int depth);
+
+void perft_test_from_file(const char* filename);
 
 /* Bit Twiddling */
 
@@ -192,6 +196,8 @@ u32 board_metadata_get_castling_rights(BoardMetadata *md);
 Board *board_default_starting_position();
 
 Board *board_from_fen(const char *fen);
+
+void fen_parse(Board* board, const char* fen, int *i);
 
 /* Board Modifiers*/
 

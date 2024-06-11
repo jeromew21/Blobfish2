@@ -1,14 +1,15 @@
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 #include "chess.h"
 
-void copy_bitboard(u64* dest, u64*copy) {
+void copy_bitboard(u64 *dest, u64 *copy) {
     for (int i = 0; i < 8; i++) {
         dest[i] = copy[i];
     }
 }
 
-bool comp_bitboards(u64* b1, u64*b2, int *out_which) {
+bool comp_bitboards(u64 *b1, u64 *b2, int *out_which) {
     for (int i = 7; i >= 0; i--) {
         if (b1[i] != b2[i]) {
             *out_which = i;
@@ -18,9 +19,78 @@ bool comp_bitboards(u64* b1, u64*b2, int *out_which) {
     return true;
 }
 
-void perft_test_from_file(const char* filename) {
 
+#define LINE_BUFFER_SIZE 1024
+
+bool parse_depth_count(char *line, int *i, int *out_depth, int *out_count) {
+    int depth_start;
+    int count_start = -1;
+    if (*i >= strlen(line)) return false;
+    char c = '\0';
+    while (c != ';') {
+        c = line[*i];
+        if (c == '\0') break;
+        if (c == 'D') {
+            depth_start = (*i) + 1;
+        } else if (c == ' ' && count_start == -1) {
+            count_start = (*i) + 1;
+        }
+        (*i)++;
+    }
+    *out_depth = atoi(line + depth_start);
+    *out_count = atoi(line + count_start);
+    return true;
 }
+
+bool perft_test_line(char *line) {
+    int i = 0;
+    char c = '\0';
+    while (c != ';') {
+        c = line[i];
+        i++;
+    }
+    int depth, count;
+    Board *board = board_from_fen(line);
+    int cases = 0;
+    int passes = 0;
+    while (1) {
+        bool parse_result = parse_depth_count(line, &i, &depth, &count);
+        if (!parse_result) { break; }
+        PerftResults pr = perft(board, depth);
+        cases++;
+        if (pr.nodes == count) {
+            passes++;
+        }
+    }
+    free(board);
+    if (passes == cases) {
+        printf("PASSED %i cases\n", cases);
+        return true;
+    } else {
+        printf("FAIL\n");
+        return false;
+    }
+}
+
+void perft_test_from_file(const char *filename) {
+    FILE *fp;
+    char buffer[LINE_BUFFER_SIZE];
+    fp = fopen(filename, "r");
+    int cases = 0;
+    int passes = 0;
+    while (fgets(buffer, LINE_BUFFER_SIZE, fp)) {
+        if (perft_test_line(buffer)) {
+            passes++;
+        }
+        cases++;
+    }
+    fclose(fp);
+    if (passes == cases) {
+        printf("Passed all test cases.");
+    }
+}
+
+#undef LINE_BUFFER_SIZE
 
 PerftResults perft_helper(Board *board, int depth, int top_depth);
 
@@ -28,8 +98,7 @@ PerftResults perft(Board *board, int depth) {
     return perft_helper(board, depth, depth);
 }
 
-PerftResults perft_helper(Board *board, int depth, int top_depth)
-{
+PerftResults perft_helper(Board *board, int depth, int top_depth) {
     PerftResults r;
     if (depth == 0) {
         r.nodes = 1;
