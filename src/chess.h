@@ -81,13 +81,20 @@ typedef struct Board {
  * https://www.chessprogramming.org/Encoding_Moves
  */
 enum MoveMetadata {
-    kQuietMove,
-    kDoublePawnMove,
-    kKingSideCastleMove,
-    kQueenSideCastleMove,
-    kCaptureMove,
-    kEnPassantMove,
-    // TODO: underpromotions
+    kQuietMove                  = 0b0000,
+    kDoublePawnMove             = 0b0001,
+    kKingSideCastleMove         = 0b0010,
+    kQueenSideCastleMove        = 0b0011,
+    kCaptureMove                = 0b0100,
+    kEnPassantMove              = 0b0101,
+    kKnightPromotionMove        = 0b1000,
+    kKnightCapturePromotionMove = 0b1100,
+    kBishopPromotionMove        = 0b1001,
+    kBishopCapturePromotionMove = 0b1101,
+    kRookPromotionMove          = 0b1010,
+    kRookCapturePromotionMove   = 0b1110,
+    kQueenPromotionMove         = 0b1011,
+    kQueenCapturePromotionMove  = 0b1111,
 };
 
 /**
@@ -104,11 +111,25 @@ typedef struct MoveList {
     //int _data_capacity;
 } MoveList;
 
+typedef struct PerftResults {
+    u64 nodes;
+    u64 captures;
+    u64 ep;
+    u64 castles;
+    u64 promotions;
+} PerftResults;
+
 /* Debug */
 
 void dump_u64(u64 bitset);
 
 void dump_board(Board *board);
+
+void dump_bitboard(u64 *bitboards);
+
+void move_to_string(Move mv, char *buf);
+
+PerftResults perft(Board *board, int depth);
 
 /* Bit Twiddling */
 

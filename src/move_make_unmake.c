@@ -43,11 +43,11 @@ void bitboards_update(u64 *bitboards, i32 turn, Move mv) {
         u64 ep_removal_bitset = (u64) 1 << ep_removal_square;
         bitboards[!turn] &= ~ep_removal_bitset;
         bitboards[kPawn] &= ~ep_removal_bitset;
-    } else if (move_metadata == kCaptureMove) {
+    } else if (move_metadata & kCaptureMove) { // capture bit flag
         for (int i = 2; i < 8; i++) {
             if (bitboards[!turn] & bitboards[i] & dest) {
                 bitboards[!turn] &= ~dest;
-                bitboards[i] |= dest;
+                bitboards[i] &= ~dest;
                 break;
             }
         }
@@ -57,6 +57,19 @@ void bitboards_update(u64 *bitboards, i32 turn, Move mv) {
         bitboards[turn] |= dest;
         bitboards[kPawn] &= ~src;
         bitboards[kPawn] |= dest;
+    } else if (move_metadata & 0b1000) { // promotion bit flag
+        bitboards[turn] &= ~src;
+        bitboards[turn] |= dest;
+        bitboards[kPawn] &= ~src;
+        if (move_metadata == kQueenPromotionMove || move_metadata == kQueenCapturePromotionMove) {
+            bitboards[kQueen] |= dest;
+        } else if (move_metadata == kBishopPromotionMove || move_metadata == kBishopCapturePromotionMove) {
+            bitboards[kBishop] |= dest;
+        } else if (move_metadata == kKnightPromotionMove || move_metadata == kKnightCapturePromotionMove) {
+            bitboards[kKnight] |= dest;
+        } else if (move_metadata == kRookPromotionMove || move_metadata == kRookCapturePromotionMove) {
+            bitboards[kRook] |= dest;
+        }
     } else if (move_metadata == kKingSideCastleMove || move_metadata == kQueenSideCastleMove) {
         u64 rook_src;
         u64 rook_dest;
@@ -143,7 +156,7 @@ void make_move(Board *board, Move mv) {
     u32 captured_piece = 0;
     if (move_metadata == kEnPassantMove) {
         captured_piece = kPawn;
-    } else if (move_metadata == kCaptureMove) {
+    } else if (move_metadata & kCaptureMove) {
         for (int i = 2; i < 8; i++) {
             if (board->_bitboard[!board->_turn] & board->_bitboard[i] & dest) {
                 captured_piece = i;
@@ -176,19 +189,40 @@ void unmake(Board *board) {
         board->_bitboard[!board->_turn] &= ~dest;
         board->_bitboard[kPawn] |= src;
         board->_bitboard[kPawn] &= ~dest;
+    } else if (move_metadata & 0b1000) { // promotion tag
+        board->_bitboard[!board->_turn] |= src;
+        board->_bitboard[kPawn] |= src; // add pawn back
+        if (move_metadata == kQueenPromotionMove || move_metadata == kQueenCapturePromotionMove) {
+            board->_bitboard[!board->_turn] &= ~dest; // take away the new thing
+            board->_bitboard[kQueen] &= ~dest;
+        } else if (move_metadata == kBishopPromotionMove || move_metadata == kBishopCapturePromotionMove) {
+            board->_bitboard[!board->_turn] &= ~dest; // take away the new thing
+            board->_bitboard[kBishop] &= ~dest;
+        } else if (move_metadata == kKnightPromotionMove || move_metadata == kKnightCapturePromotionMove) {
+            board->_bitboard[!board->_turn] &= ~dest; // take away the new thing
+            board->_bitboard[kKnight] &= ~dest;
+        } else if (move_metadata == kRookPromotionMove || move_metadata == kRookCapturePromotionMove) {
+            board->_bitboard[!board->_turn] &= ~dest; // take away the new thing
+            board->_bitboard[kRook] &= ~dest;
+        }
+        if (move_metadata & kCaptureMove) {
+            u32 captured_piece = board_metadata_get_captured_piece(md);
+            board->_bitboard[captured_piece] |= dest;
+            board->_bitboard[board->_turn] |= dest;
+        }
     } else if (move_metadata == kKingSideCastleMove || move_metadata == kQueenSideCastleMove) {
-        const u64 rank1 =  0x00000000000000FF;
-        const u64 rank8 =  0xFF00000000000000;
+        const u64 rank1 = 0x00000000000000FF;
+        const u64 rank8 = 0xFF00000000000000;
+        const u64 rank = (!board->_turn) == kWhite ? rank1 : rank8;
         u64 rook_src;
         u64 rook_dest;
         if (move_metadata == kKingSideCastleMove) {
-            rook_src = (u64) 1 << bitscan_reverse(board->_rook_start_positions & ((!board->_turn) == kWhite ? rank1 : rank8));
+            rook_src = (u64) 1 << bitscan_reverse(board->_rook_start_positions & rank);
             rook_dest = dest >> 1;
         } else {
-            rook_src = (u64) 1 << bitscan_forward(board->_rook_start_positions & ((!board->_turn) == kWhite ? rank1 : rank8));
+            rook_src = (u64) 1 << bitscan_forward(board->_rook_start_positions & rank);
             rook_dest = dest << 1;
         }
-        dump_u64(rook_src);
         board->_bitboard[!board->_turn] |= src | rook_src;
         board->_bitboard[!board->_turn] &= ~(dest | rook_dest);
         board->_bitboard[kKing] |= src;
@@ -202,10 +236,10 @@ void unmake(Board *board) {
                 board->_bitboard[!board->_turn] &= ~dest;
                 board->_bitboard[i] |= src;
                 board->_bitboard[i] &= ~dest;
-                u32 captured_piece = board_metadata_get_captured_piece(md);
-                if (captured_piece > 0) {
+                if (move_metadata & 0b0100) {
+                    u32 captured_piece = board_metadata_get_captured_piece(md);
                     board->_bitboard[captured_piece] |= dest;
-                    board->_bitboard[board->_turn] |= board->_bitboard[captured_piece];
+                    board->_bitboard[board->_turn] |= dest;
                 }
                 break;
             }

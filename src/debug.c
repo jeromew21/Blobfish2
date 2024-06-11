@@ -1,29 +1,14 @@
 #include "chess.h"
 
-void dump_board(Board *board) {
-    printf("======== board dump ========\n");
-    BoardMetadata *md = board_metadata_peek(board, 0);
-    printf("Ply: %i\n", board->_ply);
-    printf("Turn: %s\n", board->_turn == kWhite ? "White" : "Black");
-    {
-        u32 rights = board_metadata_get_castling_rights(md) & 0xf;
-        printf("Castling rights: 0x%x\n", rights & 0xf);
-        printf("\tWhite king-side: %s\n", rights & kWhiteKingSideFlag ? "no" : "yes");
-        printf("\tWhite queen-side: %s\n", rights & kWhiteQueenSideFlag ? "no" : "yes");
-        printf("\tBlack king-side: %s\n", rights & kBlackKingSideFlag ? "no" : "yes");
-        printf("\tBlack queen-side: %s\n", rights & kBlackQueenSideFlag ? "no" : "yes");
-    }
-    printf("En Passant Square: %i\n", board_metadata_get_en_passant_square(md) & 0xff);
-
-    // dump_u64(board->_bitboard[kWhite] | board->_bitboard[kBlack]);
+void dump_bitboard(u64 *bitboards) {
     for (int row = 7; row >= 0; row--) {
         printf("|");
         for (int col = 0; col < 8; col++) {
             u64 elem = ((u64) 1 << (row * 8 + col));
             int y = 0;
             for (int j = 2; j < 8; j++) {
-                if (board->_bitboard[j] & elem) {
-                    if (board->_bitboard[kWhite] & elem) {
+                if (bitboards[j] & elem) {
+                    if (bitboards[kWhite] & elem) {
                         switch (j) {
                             case kPawn:
                                 printf("P");
@@ -83,6 +68,23 @@ void dump_board(Board *board) {
         }
         printf("\n");
     }
+}
+
+void dump_board(Board *board) {
+    printf("======== board dump ========\n");
+    BoardMetadata *md = board_metadata_peek(board, 0);
+    printf("Ply: %i\n", board->_ply);
+    printf("Turn: %s\n", board->_turn == kWhite ? "White" : "Black");
+    {
+        u32 rights = board_metadata_get_castling_rights(md) & 0xf;
+        printf("Castling rights: 0x%x\n", rights & 0xf);
+        printf("\tWhite king-side: %s\n", rights & kWhiteKingSideFlag ? "no" : "yes");
+        printf("\tWhite queen-side: %s\n", rights & kWhiteQueenSideFlag ? "no" : "yes");
+        printf("\tBlack king-side: %s\n", rights & kBlackKingSideFlag ? "no" : "yes");
+        printf("\tBlack queen-side: %s\n", rights & kBlackQueenSideFlag ? "no" : "yes");
+    }
+    printf("En Passant Square: %i\n", board_metadata_get_en_passant_square(md) & 0xff);
+    dump_bitboard(board->_bitboard);
     printf("========    end     ========\n");
 }
 

@@ -34,7 +34,6 @@ bool is_attacked(u64 bitset, const u64* bitboards, u32 attacking_color);
 MoveList generate_all_legal_moves(Board *board) {
     MoveList legal = move_list_create();
     MoveList pseudo_legal = generate_all_pseudo_legal_moves(board);
-    const u64 king = board->_bitboard[board->_turn] & board->_bitboard[kKing];
     for (int i = 0; i < pseudo_legal.count; i++) {
         u64 bitboards[8];
         for (int k = 0; k < 8; k++) { // could be memcpy instead
@@ -42,7 +41,7 @@ MoveList generate_all_legal_moves(Board *board) {
         }
         Move mv = move_list_get(&pseudo_legal, i);
         bitboards_update(bitboards, board->_turn, mv);
-        if (!is_attacked(king, bitboards, !board->_turn)) {
+        if (!is_attacked(bitboards[board->_turn] & bitboards[kKing], bitboards, !board->_turn)) {
             move_list_push(&legal, mv);
         }
     }
@@ -129,13 +128,15 @@ MoveList generate_all_pseudo_legal_moves(Board *board) {
         const u64 empty_mask = ~occupancy_mask;
         const u64 not_a_file = ~0x0101010101010101;
         const u64 not_h_file = ~0x8080808080808080;
-        const u64 en_passant_square = (u64) 1 << board_metadata_get_en_passant_square(board_metadata_peek(board, 0));
+        const u64 last_rank = 0xFF000000000000FF;
+        const u32 ep_idx = board_metadata_get_en_passant_square(board_metadata_peek(board, 0));
+        const u64 en_passant_square = ep_idx == 0 ? 0 : (u64) 1 << ep_idx;
         u64 pawn_east_attacks;
         u64 pawn_west_attacks;
         u64 pawn_jumps_single;
         u64 pawn_double_push_destinations; // locations of pawns that can double push
-        u32 east_offset;
-        u32 west_offset;
+        i32 east_offset;
+        i32 west_offset;
         u32 pawn_jump_offset;
         if (board->_turn == kWhite) {
             const u64 fourth_rank = 0x00000000FF000000;
@@ -158,28 +159,47 @@ MoveList generate_all_pseudo_legal_moves(Board *board) {
         }
         while (pawn_east_attacks) {
             const u32 dest_idx = bitscan_forward(pawn_east_attacks);
-            const u32 src_idx = dest_idx + east_offset;
+            const u32 src_idx = ((i32)dest_idx) + east_offset;
             const u64 dest_bit = (u64) 1 << dest_idx;
-            u32 flags = (dest_bit & en_passant_square) ? kEnPassantMove : kCaptureMove;
-            const Move mv = move_create(src_idx, dest_idx, flags);
-            move_list_push(&move_list, mv);
+            if (dest_bit & last_rank) {
+                move_list_push(&move_list, move_create(src_idx, dest_idx, kQueenCapturePromotionMove));
+                move_list_push(&move_list, move_create(src_idx, dest_idx, kBishopCapturePromotionMove));
+                move_list_push(&move_list, move_create(src_idx, dest_idx, kKnightCapturePromotionMove));
+                move_list_push(&move_list, move_create(src_idx, dest_idx, kRookCapturePromotionMove));
+            } else {
+                const u32 flags = (dest_bit & en_passant_square) ? kEnPassantMove : kCaptureMove;
+                move_list_push(&move_list, move_create(src_idx, dest_idx, flags));
+            }
             pawn_east_attacks ^= dest_bit;
         }
         while (pawn_west_attacks) {
             const u32 dest_idx = bitscan_forward(pawn_west_attacks);
-            const u32 src_idx = dest_idx + west_offset;
+            const u32 src_idx = ((i32)dest_idx) + west_offset;
             const u64 dest_bit = (u64) 1 << dest_idx;
-            u32 flags = (dest_bit & en_passant_square) ? kEnPassantMove : kCaptureMove;
-            const Move mv = move_create(src_idx, dest_idx, flags);
-            move_list_push(&move_list, mv);
+            if (dest_bit & last_rank) {
+                move_list_push(&move_list, move_create(src_idx, dest_idx, kQueenCapturePromotionMove));
+                move_list_push(&move_list, move_create(src_idx, dest_idx, kBishopCapturePromotionMove));
+                move_list_push(&move_list, move_create(src_idx, dest_idx, kKnightCapturePromotionMove));
+                move_list_push(&move_list, move_create(src_idx, dest_idx, kRookCapturePromotionMove));
+            } else {
+                u32 flags = (dest_bit & en_passant_square) ? kEnPassantMove : kCaptureMove;
+                move_list_push(&move_list, move_create(src_idx, dest_idx, flags));
+            }
             pawn_west_attacks ^= dest_bit;
         }
         while (pawn_jumps_single) {
             const u32 dest_idx = bitscan_forward(pawn_jumps_single);
             const u32 src_idx = dest_idx + pawn_jump_offset;
-            const Move mv = move_create(src_idx, dest_idx, 0);
-            move_list_push(&move_list, mv);
-            pawn_jumps_single ^= (u64) 1 << dest_idx;
+            const u64 dest_bit = (u64) 1 << dest_idx;
+            if (dest_bit & last_rank) {
+                move_list_push(&move_list, move_create(src_idx, dest_idx, kQueenPromotionMove));
+                move_list_push(&move_list, move_create(src_idx, dest_idx, kKnightPromotionMove));
+                move_list_push(&move_list, move_create(src_idx, dest_idx, kBishopPromotionMove));
+                move_list_push(&move_list, move_create(src_idx, dest_idx, kRookPromotionMove));
+            } else {
+                move_list_push(&move_list, move_create(src_idx, dest_idx, kQuietMove));
+            }
+            pawn_jumps_single ^= dest_bit;
         }
         while (pawn_double_push_destinations) {
             const u32 dest_idx = bitscan_forward(pawn_double_push_destinations);
@@ -238,11 +258,11 @@ bool is_attacked(u64 bitset, const u64* bitboards, u32 attacking_color) {
             return true;
         }
         // Knight
-        if (knight_moves(target_idx) & enemy_mask & bitboards[kKnight]) {
+        if (knight_moves(target_idx) & (enemy_mask & bitboards[kKnight])) {
             return true;
         }
         // King
-        if (king_moves(target_idx) & enemy_mask & bitboards[kKnight]) {
+        if (king_moves(target_idx) & enemy_mask & bitboards[kKing]) {
             return true;
         }
         // Pawn
