@@ -1,4 +1,5 @@
 #pragma once
+
 #include <stdint.h>
 #include <stdio.h>
 
@@ -10,7 +11,7 @@ typedef uint16_t Move; // could using 32 bits instead be more optimized?
 
 typedef uint32_t u32;
 
-typedef int32_t  i32;
+typedef int32_t i32;
 
 /**
  * See note on MoveList for more information.
@@ -39,9 +40,9 @@ enum Piece {
  * 1 in any slot means it's not allowed.
  */
 enum CastlingRights {
-    kWhiteKingSideFlag  = 0b0001,
+    kWhiteKingSideFlag = 0b0001,
     kWhiteQueenSideFlag = 0b0010,
-    kBlackKingSideFlag  = 0b0100,
+    kBlackKingSideFlag = 0b0100,
     kBlackQueenSideFlag = 0b1000,
 };
 
@@ -52,7 +53,7 @@ enum CastlingRights {
  */
 typedef struct BoardMetadata {
     Move _last_move; // 16 bits for now
-    uint16_t  _state_data;
+    uint16_t _state_data;
 //    i32 _en_passant_square; // 8 bits?
 //    i32 _captured_piece; // 4 bits indexing into bitboard ?
 //    uint8_t _castling_rights[4]; // should be a 4-bit field
@@ -105,7 +106,7 @@ typedef struct MoveList {
 
 void dump_u64(u64 bitset);
 
-void dump_board(Board* board);
+void dump_board(Board *board);
 
 /* Bit Twiddling */
 
@@ -113,9 +114,9 @@ u32 bitscan_forward(u64 bitset);
 
 u32 bitscan_reverse(u64 bitset);
 
-u32 popcount(u64 bitset);
-
-u64 permute_mask(u64 mask, i32 index, i32 pop_count);
+//u32 popcount(u64 bitset);
+//
+//u64 permute_mask(u64 mask, i32 index, i32 pop_count);
 
 /* Move */
 
@@ -141,11 +142,11 @@ void move_list_push(MoveList *list, Move mv);
 
 /* Move Generation */
 
-MoveList generate_all_pseudo_legal_moves(Board* board);
+MoveList generate_all_pseudo_legal_moves(Board *board);
 
 /* Board Metadata */
 
-BoardMetadata *board_metadata_peek(Board* board);
+BoardMetadata *board_metadata_peek(Board *board);
 
 void board_metadata_set_en_passant_square(BoardMetadata *md, u32 ep_square);
 
@@ -163,10 +164,10 @@ u32 board_metadata_get_castling_rights(BoardMetadata *md);
 
 Board *board_default_starting_position();
 
-Board *board_from_fen(const char* fen);
+Board *board_from_fen(const char *fen);
 
 /* Board Modifiers*/
 
-void make_move(Board* board, Move mv);
+void make_move(Board *board, Move mv);
 
-void unmake(Board* board);
+void unmake(Board *board);

@@ -14,7 +14,20 @@ void move_to_string(Move mv, char *buf) {
 }
 
 void dump_board(Board *board) {
-    printf("=== board dump ===\n");
+    printf("======== board dump ========\n");
+    BoardMetadata *md = board_metadata_peek(board);
+    printf("Ply: %i\n", board->_ply);
+    printf("Turn: %s\n", board->_turn == kWhite ? "White" : "Black");
+    {
+        u32 rights = board_metadata_get_castling_rights(md) & 0xf;
+        printf("Castling rights: 0x%x\n", rights & 0xf);
+        printf("\tWhite king-side: %s\n", rights & kWhiteKingSideFlag ? "no" : "yes");
+        printf("\tWhite queen-side: %s\n", rights & kWhiteQueenSideFlag ? "no" : "yes");
+        printf("\tBlack king-side: %s\n", rights & kBlackKingSideFlag ? "no" : "yes");
+        printf("\tBlack queen-side: %s\n", rights & kBlackQueenSideFlag ? "no" : "yes");
+    }
+    printf("En Passant Square: %i\n", board_metadata_get_en_passant_square(md) & 0xff);
+
     // dump_u64(board->_bitboard[kWhite] | board->_bitboard[kBlack]);
     for (int row = 7; row >= 0; row--) {
         printf("|");
@@ -83,6 +96,7 @@ void dump_board(Board *board) {
         }
         printf("\n");
     }
+    printf("========    end     ========\n");
 }
 
 void dump_u64(u64 bitset) {
@@ -113,97 +127,12 @@ Board *board_default_starting_position() {
     return board;
 }
 
-Board *board_from_goofy_string(const char *goofy_string) {
-    Board *board = calloc(1, sizeof(Board));
-    char clean_goofy_string[64];
-    {
-        int i = 0;
-        for (int k = 0; k < 72; k++) {
-            char c = goofy_string[k];
-            if (c == '\n')
-                continue;
-            int row = i / 8;
-            int col = i % 8;
-            clean_goofy_string[(7 - row) * 8 + col] = c;
-            i++;
-        }
-    }
-    for (int i = 0; i < 64; i++) {
-        u64 piece = (u64) 1 << i;
-        char c = clean_goofy_string[i];
-        switch (c) {
-            case 'N':
-                board->_bitboard[kWhite] |= piece;
-                board->_bitboard[kKnight] |= piece;
-                break;
-            case 'P':
-                board->_bitboard[kWhite] |= piece;
-                board->_bitboard[kPawn] |= piece;
-                break;
-            case 'K':
-                board->_bitboard[kWhite] |= piece;
-                board->_bitboard[kKing] |= piece;
-                break;
-            case 'Q':
-                board->_bitboard[kWhite] |= piece;
-                board->_bitboard[kQueen] |= piece;
-                break;
-            case 'R':
-                board->_bitboard[kWhite] |= piece;
-                board->_bitboard[kRook] |= piece;
-                break;
-            case 'B':
-                board->_bitboard[kWhite] |= piece;
-                board->_bitboard[kBishop] |= piece;
-                break;
-            case 'p':
-                board->_bitboard[kBlack] |= piece;
-                board->_bitboard[kPawn] |= piece;
-                break;
-            case 'n':
-                board->_bitboard[kBlack] |= piece;
-                board->_bitboard[kKnight] |= piece;
-                break;
-            case 'k':
-                board->_bitboard[kBlack] |= piece;
-                board->_bitboard[kKing] |= piece;
-                break;
-            case 'q':
-                board->_bitboard[kBlack] |= piece;
-                board->_bitboard[kQueen] |= piece;
-                break;
-            case 'r':
-                board->_bitboard[kBlack] |= piece;
-                board->_bitboard[kRook] |= piece;
-                break;
-            case 'b':
-                board->_bitboard[kBlack] |= piece;
-                board->_bitboard[kBishop] |= piece;
-                break;
-            default:
-                break;
-        }
-    }
-    return board;
-}
-
 int main() {
     srand(0);
     printf("hello world\n");
-    Board *board = board_default_starting_position();
-//    Board *board = board_from_goofy_string(
-//            "........\n........\n..b.....\n..Nn...N\np.......\nPPPPPPPP\n........\n........");
+    Board *board = board_from_fen("rnbqkbnr/pp1p1pp1/7p/2pPp3/4P3/8/PPP2PPP/RNBQKBNR w KQkq c6 0 4");
     dump_board(board);
-    for (int i = 0; i < 50; i++) {
-        MoveList moves = generate_all_pseudo_legal_moves(board);
-        printf("%i moves generated\n", moves.count);
-        char buf[6];
-        Move mv = move_list_get(&moves, rand() % moves.count);
-        move_to_string(mv, buf);
-        printf("%.5s\n", buf);
-        make_move(board, mv);
-        dump_board(board);
-        fgets(buf, 6, stdin);
-    }
+    MoveList moves = generate_all_pseudo_legal_moves(board);
+    printf("%i moves generated\n", moves.count);
     free(board);
 }
