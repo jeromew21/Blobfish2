@@ -7,8 +7,9 @@ add_executable(blobfish
         src/fen_parse.c
         src/debug.c
         src/perft.c
+        src/evaluation.c
         src/move.c
         src/move_generation.c
         src/move_list.c
         src/move_make_unmake.c
-        src/chess.c)
+        src/cli.c)
