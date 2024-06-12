@@ -12,6 +12,8 @@ void search(Board *board, bool *stop, Move *best_move) {
   // TODO: iterative deepening
   // when you stop, cancel the entire depth level, and return best move of
   // previous
+  // there seems to be a bug with forced moves?
+  // TODO: don't return best move in recursive impl, use root node search
   const int depth = 3;
   search_recursive(board, MIN_EVAL, MAX_EVAL, depth, stop, best_move);
 }
