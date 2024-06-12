@@ -9,7 +9,8 @@ PerftResults perft_helper(Board *board, int depth, int top_depth);
 
 void perft_performance_test() {
   struct timespec start, stop;
-  Board *board = board_default_starting_position();
+  Board *board = board_uninitialized();
+  board_initialize_startpos(board);
   clock_gettime(CLOCK_MONOTONIC_RAW, &start);
   PerftResults pr = perft(board, 5);
   clock_gettime(CLOCK_MONOTONIC_RAW, &stop);
@@ -24,7 +25,7 @@ void perft_performance_test() {
 bool parse_depth_count(char *line, int *i, int *out_depth, int *out_count) {
   int depth_start;
   int count_start = -1;
-  if (*i >= strlen(line))
+  if (*i >= (int)strlen(line))
     return false;
   char c = '\0';
   while (c != ';') {
@@ -43,7 +44,7 @@ bool parse_depth_count(char *line, int *i, int *out_depth, int *out_count) {
   return true;
 }
 
-bool perft_test_line(char *line) {
+bool perft_test_line(char *line, int max_depth) {
   int i = 0;
   char c = '\0';
   while (c != ';') {
@@ -51,7 +52,8 @@ bool perft_test_line(char *line) {
     i++;
   }
   int depth, count;
-  Board *board = board_from_fen(line);
+  Board *board = board_uninitialized();
+  board_initialize_fen(board, line);
   int cases = 0;
   int passes = 0;
   while (1) {
@@ -59,9 +61,11 @@ bool perft_test_line(char *line) {
     if (!parse_result) {
       break;
     }
+    if (depth > max_depth)
+      return true;
     PerftResults pr = perft(board, depth);
     cases++;
-    if (pr.nodes == count) {
+    if ((int)pr.nodes == count) {
       passes++;
     }
   }
@@ -75,7 +79,7 @@ bool perft_test_line(char *line) {
   }
 }
 
-void perft_test_from_file(const char *filename) {
+void perft_test_from_file(const char *filename, int max_depth) {
   FILE *fp;
 #define LINE_BUFFER_SIZE 1024
   char buffer[LINE_BUFFER_SIZE];
@@ -83,7 +87,7 @@ void perft_test_from_file(const char *filename) {
   int cases = 0;
   int passes = 0;
   while (fgets(buffer, LINE_BUFFER_SIZE, fp)) {
-    if (perft_test_line(buffer)) {
+    if (perft_test_line(buffer, max_depth)) {
       passes++;
     }
     cases++;
@@ -127,10 +131,9 @@ PerftResults perft_helper(Board *board, int depth, int top_depth) {
     if (move_md == kQueenSideCastleMove || move_md == kKingSideCastleMove) {
       r.castles++;
     }
-    if (move_md & 0b1000) {
+    if (move_md & PROMOTION_BIT_FLAG) {
       r.promotions++;
     }
-    u64 dest = move_get_dest(mv);
     board_make_move(board, mv);
     PerftResults sub_results = perft_helper(board, depth - 1, top_depth);
     r.nodes += sub_results.nodes;

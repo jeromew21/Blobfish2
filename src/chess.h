@@ -1,7 +1,7 @@
 #pragma once
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 
 /* https://www.chessprogramming.org/Square_Mapping_Considerations#LittleEndianRankFileMapping
@@ -16,6 +16,10 @@ typedef uint32_t u32;
 typedef int32_t i32;
 
 typedef double f64;
+
+static const i32 PROMOTION_BIT_FLAG = 0x8;
+
+static const i32 CAPTURE_BIT_FLAG = 0x4;
 
 /**
  * See note on MoveList for more information.
@@ -48,10 +52,10 @@ enum Piece {
  * king and rook haven't moved yet). 1 in any slot means it's not allowed.
  */
 enum CastlingRights {
-  kWhiteKingSideFlag = 0b0001,
-  kWhiteQueenSideFlag = 0b0010,
-  kBlackKingSideFlag = 0b0100,
-  kBlackQueenSideFlag = 0b1000,
+  kWhiteKingSideFlag = 0x1,  // 0b0001,
+  kWhiteQueenSideFlag = 0x2, // 0b0010,
+  kBlackKingSideFlag = 0x4,  // 0b0100,
+  kBlackQueenSideFlag = 0x8, // 0b1000,
 };
 
 /**
@@ -87,20 +91,20 @@ typedef struct Board {
  * Note that 0b0100 masks for captures, and 0b1000 masks for promotions.
  */
 enum MoveMetadata {
-  kQuietMove = 0b0000,
-  kDoublePawnMove = 0b0001,
-  kKingSideCastleMove = 0b0010,
-  kQueenSideCastleMove = 0b0011,
-  kCaptureMove = 0b0100,
-  kEnPassantMove = 0b0101,
-  kKnightPromotionMove = 0b1000,
-  kKnightCapturePromotionMove = 0b1100,
-  kBishopPromotionMove = 0b1001,
-  kBishopCapturePromotionMove = 0b1101,
-  kRookPromotionMove = 0b1010,
-  kRookCapturePromotionMove = 0b1110,
-  kQueenPromotionMove = 0b1011,
-  kQueenCapturePromotionMove = 0b1111,
+  kQuietMove = 0x0,
+  kDoublePawnMove = 0x1,             // 0b0001,
+  kKingSideCastleMove = 0x2,         // 0b0010,
+  kQueenSideCastleMove = 0x3,        // 0b0011,
+  kCaptureMove = 0x4,                // 0b0100,
+  kEnPassantMove = 0x5,              // 0b0101,
+  kKnightPromotionMove = 0x8,        // 0b1000,
+  kKnightCapturePromotionMove = 0xc, // 0b1100,
+  kBishopPromotionMove = 0x9,        // 0b1001,
+  kBishopCapturePromotionMove = 0xd, // 0b1101,
+  kRookPromotionMove = 0xa,          // 0b1010,
+  kRookCapturePromotionMove = 0xe,   // 0b1110,
+  kQueenPromotionMove = 0xb,         // 0b1011,
+  kQueenCapturePromotionMove = 0xf,  // 0b1111,
 };
 
 /**
@@ -188,17 +192,19 @@ u32 board_metadata_get_castling_rights(BoardMetadata *md);
 
 /* Board construction */
 
-Board *board_default_starting_position();
+Board *board_uninitialized();
 
-Board *board_from_fen(const char *fen);
+void board_initialize_fen(Board *board, const char *fen);
 
-void fen_parse(Board *board, const char *fen, int *i);
+void board_initialize_startpos(Board *board);
+
+void fen_parse(Board *board, const char *fen, i32 *i);
 
 /* Board state */
 
-bool board_is_check(Board* board); // TODO
+bool board_is_check(Board *board); // TODO
 
-i32 board_status(Board* board); // TODO: checkmate, stalemate, 50 move, etc.
+i32 board_status(Board *board); // TODO: checkmate, stalemate, 50 move, etc.
 
 /* Board Modifiers*/
 
@@ -208,9 +214,9 @@ void board_unmake(Board *board);
 
 /* Piece movement */
 
-i32 attacker_count(u64 bitset, u64* bitboards, i32 attacking_color);
+i32 attacker_count(u64 bitset, u64 *bitboards, i32 attacking_color);
 
-bool is_attacked(u64 bitset, u64* bitboards, i32 attacking_color);
+bool is_attacked(u64 bitset, u64 *bitboards, i32 attacking_color);
 
 u64 king_moves(u32 source_idx);
 

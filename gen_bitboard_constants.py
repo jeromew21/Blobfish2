@@ -30,9 +30,8 @@ def write_rook_moves(f):
                 else:
                     break
             board[source] = 0
-            f.write("\t\t0b")
-            for i in reversed(board):
-                f.write(f"{i}")
+            f.write("\t\t")
+            write_binary_hex(board, f)
             f.write(",\n")          
         f.write("\t},\n")
     f.write("};\n\n")
@@ -55,9 +54,8 @@ def write_bishop_moves(f):
                 else:
                     break
             board[source] = 0
-            f.write("\t\t0b")
-            for i in reversed(board):
-                f.write(f"{i}")
+            f.write("\t\t")
+            write_binary_hex(board, f)
             f.write(",\n")          
         f.write("\t},\n")
     f.write("};\n\n")
@@ -78,9 +76,8 @@ def write_king_moves(f):
                     flat = rp*8 + cp
                     board[flat] = 1
         board[source] = 0
-        f.write("\t0b")
-        for i in reversed(board):
-            f.write(f"{i}")
+        f.write("\t")
+        write_binary_hex(board, f)
         f.write(",\n")          
     f.write("};\n\n")
 
@@ -101,11 +98,17 @@ def write_knight_moves(f):
                         flat = rp*8 + cp
                         board[flat] = 1
         board[source] = 0
-        f.write("\t0b")
-        for i in reversed(board):
-            f.write(f"{i}")
+        f.write("\t")
+        write_binary_hex(board, f)
         f.write(",\n")          
     f.write("};\n\n")
+
+
+def write_binary_hex(board, f):
+    bits = "".join([str(k) for k in reversed(board)])
+    binary = eval(f"0b{bits}")
+    hex_string = "0x{:02X}".format(binary)
+    f.write(hex_string)
 
 
 if __name__ == "__main__":

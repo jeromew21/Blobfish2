@@ -58,7 +58,7 @@ void bitboards_update(u64 *bitboards, i32 turn, Move mv) {
     bitboards[turn] |= dest;
     bitboards[kPawn] &= ~src;
     bitboards[kPawn] |= dest;
-  } else if (move_metadata & 0b1000) { // promotion bit flag
+  } else if (move_metadata & PROMOTION_BIT_FLAG) {
     bitboards[turn] &= ~src;
     bitboards[turn] |= dest;
     bitboards[kPawn] &= ~src;
@@ -180,7 +180,7 @@ void board_make_move(Board *board, Move mv) {
   u32 captured_piece = 0;
   if (move_metadata == kEnPassantMove) {
     captured_piece = kPawn;
-  } else if (move_metadata & kCaptureMove) {
+  } else if (move_metadata & CAPTURE_BIT_FLAG) {
     for (int i = 2; i < 8; i++) {
       if (board->_bitboard[!board->_turn] & board->_bitboard[i] & dest) {
         captured_piece = i;
@@ -213,7 +213,7 @@ void board_unmake(Board *board) {
     board->_bitboard[!board->_turn] &= ~dest;
     board->_bitboard[kPawn] |= src;
     board->_bitboard[kPawn] &= ~dest;
-  } else if (move_metadata & 0b1000) { // promotion tag
+  } else if (move_metadata & PROMOTION_BIT_FLAG) { // promotion tag
     board->_bitboard[!board->_turn] |= src;
     board->_bitboard[kPawn] |= src; // add pawn back
     if (move_metadata == kQueenPromotionMove ||
@@ -265,7 +265,7 @@ void board_unmake(Board *board) {
         board->_bitboard[!board->_turn] &= ~dest;
         board->_bitboard[i] |= src;
         board->_bitboard[i] &= ~dest;
-        if (move_metadata & 0b0100) {
+        if (move_metadata & CAPTURE_BIT_FLAG) {
           u32 captured_piece = board_metadata_get_captured_piece(md);
           board->_bitboard[captured_piece] |= dest;
           board->_bitboard[board->_turn] |= dest;
