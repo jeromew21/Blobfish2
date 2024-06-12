@@ -18,7 +18,7 @@ u32 bitscan_reverse(u64 bitset) { return 63 - __builtin_clzll(bitset); }
 /**
  * Get number of bit set to 1 in the bitset.
  */
-u32 pop_count(u64 bitset) {
+i32 pop_count(u64 bitset) {
   return __builtin_popcountll(bitset);
   // https://www.chessprogramming.org/Population_Count
   // might be architecture specific

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
 #include <stdio.h>
 
 /* https://www.chessprogramming.org/Square_Mapping_Considerations#LittleEndianRankFileMapping
@@ -61,9 +62,6 @@ enum CastlingRights {
 typedef struct BoardMetadata {
   Move _last_move; // 16 bits for now
   uint16_t _state_data;
-  //    i32 _en_passant_square; // 8 bits?
-  //    i32 _captured_piece; // 4 bits indexing into bitboard ?
-  //    uint8_t _castling_rights[4]; // should be a 4-bit field
 } BoardMetadata;
 
 /**
@@ -136,7 +134,7 @@ u32 bitscan_forward(u64 bitset);
 
 u32 bitscan_reverse(u64 bitset);
 
-u32 pop_count(u64 bitset);
+i32 pop_count(u64 bitset);
 
 // u64 permute_mask(u64 mask, i32 index, i32 pop_count);
 
@@ -196,8 +194,30 @@ Board *board_from_fen(const char *fen);
 
 void fen_parse(Board *board, const char *fen, int *i);
 
+/* Board state */
+
+bool board_is_check(Board* board); // TODO
+
+i32 board_status(Board* board); // TODO: checkmate, stalemate, 50 move, etc.
+
 /* Board Modifiers*/
 
 void board_make_move(Board *board, Move mv);
 
 void board_unmake(Board *board);
+
+/* Piece movement */
+
+i32 attacker_count(u64 bitset, u64* bitboards, i32 attacking_color);
+
+bool is_attacked(u64 bitset, u64* bitboards, i32 attacking_color);
+
+u64 king_moves(u32 source_idx);
+
+u64 knight_moves(u32 source_idx);
+
+u64 bishop_moves(u32 source_idx, u64 occupancy_mask);
+
+u64 rook_moves(u32 source_idx, u64 occupancy_mask);
+
+u64 pawn_attacks(u64 source_bitset, u32 side);

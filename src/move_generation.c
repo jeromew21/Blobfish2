@@ -11,22 +11,8 @@ typedef u32 (*bitscan_function)(u64);
 
 MoveList generate_all_pseudo_legal_moves(Board *board);
 
-u64 king_moves(u32 source_idx);
-
-u64 knight_moves(u32 source_idx);
-
-u64 bishop_moves(u32 source_idx, u64 occupancy_mask);
-
-u64 rook_moves(u32 source_idx, u64 occupancy_mask);
-
-u64 pawn_attacks(u64 source_bit, u32 side);
-
-//i32 num_attackers(u64 bitset, u64* bitboards);
-
-bool is_attacked(u64 bitset, const u64* bitboards, u32 attacking_color);
-
 /**
- * In the future, we might generate unchecking moves separately.
+ * In the future, we might generate unchecking and/or special moves separately.
  */
 MoveList generate_all_legal_moves(Board *board) {
     MoveList legal = move_list_create();
@@ -239,17 +225,15 @@ MoveList generate_all_pseudo_legal_moves(Board *board) {
 /**
  * Check if the squares marked by bitset are attacked by any pieces of attacking_color.
  * Should be more efficient than an attacker count, due to possibility of early return.
+ * Or is it; not sure how efficient OR-ing all the stuff together then branching once is.
  */
-bool is_attacked(u64 bitset, const u64* bitboards, u32 attacking_color) {
+bool is_attacked(u64 bitset, u64* bitboards, i32 attacking_color) {
     const u64 occupancy_mask = bitboards[kWhite] | bitboards[kBlack];
     const u64 enemy_mask = bitboards[attacking_color];
     while (bitset) {
         const u32 target_idx = bitscan_forward(bitset);
         const u64 target_bit = (u64) 1 << target_idx;
-        if (bishop_moves(target_idx, occupancy_mask) & enemy_mask & (bitboards[kBishop] | bitboards[kQueen])) {
-            return true;
-        }
-        if (rook_moves(target_idx, occupancy_mask) & enemy_mask & (bitboards[kRook] | bitboards[kQueen])) {
+        if (pawn_attacks(target_bit, !attacking_color) & enemy_mask & bitboards[kPawn]) {
             return true;
         }
         if (knight_moves(target_idx) & (enemy_mask & bitboards[kKnight])) {
@@ -258,7 +242,10 @@ bool is_attacked(u64 bitset, const u64* bitboards, u32 attacking_color) {
         if (king_moves(target_idx) & enemy_mask & bitboards[kKing]) {
             return true;
         }
-        if (pawn_attacks(target_bit, !attacking_color) & enemy_mask & bitboards[kPawn]) {
+        if (bishop_moves(target_idx, occupancy_mask) & enemy_mask & (bitboards[kBishop] | bitboards[kQueen])) {
+            return true;
+        }
+        if (rook_moves(target_idx, occupancy_mask) & enemy_mask & (bitboards[kRook] | bitboards[kQueen])) {
             return true;
         }
         bitset ^= target_bit;
@@ -266,16 +253,34 @@ bool is_attacked(u64 bitset, const u64* bitboards, u32 attacking_color) {
     return false;
 }
 
+i32 attacker_count(u64 bitset, u64* bitboards, i32 attacking_color) {
+    const u64 occupancy_mask = bitboards[kWhite] | bitboards[kBlack];
+    const u64 enemy_mask = bitboards[attacking_color];
+    u64 attackers = 0;
+    while (bitset) {
+        const u32 target_idx = bitscan_forward(bitset);
+        const u64 target_bit = (u64) 1 << target_idx;
+        attackers |= pawn_attacks(target_bit, !attacking_color) & enemy_mask & bitboards[kPawn];
+        attackers |= knight_moves(target_idx) & (enemy_mask & bitboards[kKnight]);
+        attackers |= king_moves(target_idx) & enemy_mask & bitboards[kKing];
+        attackers |= bishop_moves(target_idx, occupancy_mask) & enemy_mask & (bitboards[kBishop] | bitboards[kQueen]);
+        attackers |= rook_moves(target_idx, occupancy_mask) & enemy_mask & (bitboards[kRook] | bitboards[kQueen]);
+        bitset ^= target_bit;
+    }
+    return pop_count(attackers);
+}
+
 /**
  * note this requires bitset instead of flat index
+ * TODO: verify this works for *entire* pawn set and not only single bitset?
  */
-u64 pawn_attacks(u64 source_bit, u32 side) {
+u64 pawn_attacks(u64 source_bitset, u32 side) {
     const u64 not_a_file = ~0x0101010101010101;
     const u64 not_h_file = ~0x8080808080808080;
     if (side == kWhite) {
-        return ((source_bit << 9) & not_a_file) | ((source_bit << 7) & not_h_file);
+        return ((source_bitset << 9) & not_a_file) | ((source_bitset << 7) & not_h_file);
     } else {
-        return ((source_bit >> 7) & not_a_file) | ((source_bit >> 9) & not_h_file);
+        return ((source_bitset >> 7) & not_a_file) | ((source_bitset >> 9) & not_h_file);
     }
 }
 

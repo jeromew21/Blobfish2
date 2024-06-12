@@ -1,6 +1,6 @@
 #pragma once
 // CAN WE DELETE THIS???
-// might need for magics later on
+// actually, we might need for magics later on
 
 enum RookDirection {
   kNorth,
