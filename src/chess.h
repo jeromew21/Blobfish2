@@ -136,7 +136,7 @@ u32 bitscan_forward(u64 bitset);
 
 u32 bitscan_reverse(u64 bitset);
 
-u32 popcount(u64 bitset);
+u32 pop_count(u64 bitset);
 
 // u64 permute_mask(u64 mask, i32 index, i32 pop_count);
 

@@ -5,20 +5,20 @@
 // there is a way to drop into assembly but idk if that's a good idea
 
 /**
- * Get index of first set bit from least signifcant direction.
+ * Get index of first set bit from least significant direction.
  * https://www.chessprogramming.org/BitScan#x86
  */
 u32 bitscan_forward(u64 bitset) { return __builtin_ffsll(bitset) - 1; }
 
 /**
- * Get index of first set bit but from more signifcant side.
+ * Get index of first set bit but from more significant side.
  */
 u32 bitscan_reverse(u64 bitset) { return 63 - __builtin_clzll(bitset); }
 
 /**
  * Get number of bit set to 1 in the bitset.
  */
-u32 popcount(u64 bitset) {
+u32 pop_count(u64 bitset) {
   return __builtin_popcountll(bitset);
   // https://www.chessprogramming.org/Population_Count
   // might be architecture specific
@@ -42,7 +42,7 @@ u64 permute_mask(u64 mask, i32 index, i32 pop_count) {
   i32 i, j;
   u64 result = 0;
   for (i = 0; i < pop_count; i++) {
-    j = bitscan_forward(mask);
+    j = (i32)bitscan_forward(mask);
     mask &= ~(((u64)1) << j);
 
     if (index & (1 << i))

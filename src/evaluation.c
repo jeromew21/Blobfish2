@@ -14,6 +14,7 @@ f64 evaluation(Board *board, i32 side) {
   f64 features[FEATURE_COUNT];
   f64 weights[FEATURE_COUNT];
 
+  // TODO: make table of function pointers...
   features[kMaterialFeature] = evaluate_material(board);
   weights[kMaterialFeature] = 1.0;
 
@@ -31,10 +32,10 @@ f64 evaluate_material(Board *board) {
                                         300.0, 500.0, 900.0, 0};
   f64 material[2] = {0, 0};
   for (int i = 2; i < 8; i++) {
-    material[kWhite] += material_table[i] * popcount(board->_bitboard[kWhite] &
-                                                     board->_bitboard[i]);
-    material[kBlack] += material_table[i] * popcount(board->_bitboard[kBlack] &
-                                                     board->_bitboard[i]);
+    material[kWhite] += material_table[i] * pop_count(board->_bitboard[kWhite] &
+                                                      board->_bitboard[i]);
+    material[kBlack] += material_table[i] * pop_count(board->_bitboard[kBlack] &
+                                                      board->_bitboard[i]);
   }
   return material[kWhite] - material[kBlack];
 }

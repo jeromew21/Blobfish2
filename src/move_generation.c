@@ -1,9 +1,6 @@
-#include <assert.h>
-#include <stdlib.h>
 #include <stdbool.h>
 #include "chess.h"
 #include "bitboard_constants.h"
-#include "move_generation.h"
 
 /*Intrinsics not working on Mac
     TODO: try using on Linux

@@ -12,4 +12,5 @@ add_executable(blobfish
         src/move_generation.c
         src/move_list.c
         src/move_make_unmake.c
+        src/search.c
         src/cli.c)

@@ -13,13 +13,20 @@ int main() {
   srand(0);
   Board *board = board_default_starting_position();
   char buffer[8192]; // what's max input len?
+  char move_bufer[16];
   while (1) {
     dump_board(board);
-    float eval = evaluation(board, kWhite);
+    f64 eval = evaluation(board, kWhite);
     printf("Eval: %f centipawns\n", eval);
     if (fgets(buffer, sizeof(buffer), stdin) != NULL) {
       buffer[strlen(buffer) - 1] = '\0';
       board_make_move_from_alg(board, buffer);
+      bool stop = false;
+      Move best_move;
+      search(board, &stop, &best_move);
+        move_to_string(best_move, move_bufer);
+        printf("Found move %s\n", move_bufer);
+      board_make_move(board, best_move);
     } else {
       break;
     }

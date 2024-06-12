@@ -5,12 +5,12 @@ u32 move_get_metadata(Move mv) {
 }
 
 u64 move_get_dest(Move mv) {
-    u32 dest = mv & 0x3f;
+    const u32 dest = mv & 0x3f;
     return (u64) 1 << dest;
 }
 
 u64 move_get_src(Move mv) {
-    u32 src = (mv >> 6) & 0x3f;
+    const u32 src = (mv >> 6) & 0x3f;
     return (u64) 1 << src;
 }
 
