@@ -3,6 +3,14 @@
 
 typedef f64 (*evaluate_function)(Board *, i32);
 
+f64 max(f64 a, f64 b) {
+    return a > b ? a : b;
+}
+
+f64 min (f64 a, f64 b) {
+    return a < b ? a : b;
+}
+
 f64 evaluate_material(Board *board, i32 side);
 
 f64 evaluate_bishop_mobility(Board *board, i32 side);
@@ -11,7 +19,6 @@ f64 evaluate_knight_mobility(Board *board, i32 side);
 
 f64 evaluate_king_safety(Board *board, i32 side);
 
-#define FEATURE_COUNT 3
 
 Centipawns evaluation(Board *board, i32 side) {
   i32 status = board_status(board);
@@ -21,7 +28,7 @@ Centipawns evaluation(Board *board, i32 side) {
   if (status == kStalemate || status == kDraw) {
     return 0;
   }
-
+#define FEATURE_COUNT 4
   // Scale is centipawns
   // 1 pawn is 100 cp
   // 100 cp is +0.1
@@ -29,15 +36,15 @@ Centipawns evaluation(Board *board, i32 side) {
       evaluate_material,
       evaluate_bishop_mobility,
       evaluate_knight_mobility,
+      evaluate_king_safety,
   };
   static const f64 weights[FEATURE_COUNT] = {
       1.0,
       1.0,
       1.0,
-  }; // These might actually want to change based on game state but keep static
-     // const for now.
-  // TODO check for terminal board state
-
+      1.0,
+  }; // These might actually want to change based
+     // on game state but keep static const for now.
   f64 features[FEATURE_COUNT];
   for (int i = 0; i < FEATURE_COUNT; i++) {
     features[i] =
@@ -49,9 +56,9 @@ Centipawns evaluation(Board *board, i32 side) {
   }
   Centipawns cp_score = (Centipawns)score;
   return side == kWhite ? cp_score : -cp_score;
+#undef FEATURE_COUNT
 }
 
-#undef FEATURE_COUNT
 
 f64 evaluate_bishop_mobility(Board *board, i32 side) {
   const u64 *bb = board->_bitboard;
@@ -91,4 +98,28 @@ f64 evaluate_material(Board *board, i32 side) {
                 pop_count(board->_bitboard[side] & board->_bitboard[i]);
   }
   return material;
+}
+
+f64 evaluate_king_safety(Board *board, i32 side) {
+    if (board->_bitboard[!side] & board->_bitboard[kQueen]) {
+        const u64 king = board->_bitboard[side] & board->_bitboard[kKing];
+        const u32 king_idx = bitscan_forward(king);
+        const u64 rank1 = 0x00000000000000FF;
+        const u64 rank8 = 0xFF00000000000000;
+        const u64 rank = side == kWhite ? rank1 : rank8;
+        // maybe make a 64 bit table of king positions?
+        // corner = better, center = worse
+        const bool on_back_rank = !(king & rank);
+        // TODO: only pawns-in-front-of-king
+        // right now counts all adjacent pawns
+        f64 pawn_shield = pop_count(king_moves(king_idx) & board->_bitboard[side] & board->_bitboard[kPawn]);
+        if (on_back_rank) {
+            return min(100.0 * pawn_shield, 300.0);
+        } else {
+            return 50.0 * pawn_shield;
+        }
+    } else {
+        // no enemy queen: return a high number by default
+        return 300.0;
+    }
 }
