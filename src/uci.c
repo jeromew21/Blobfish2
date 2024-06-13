@@ -1,32 +1,19 @@
 #include "uci.h"
 #include "chess.h"
+#include "parse.h"
 #include "perft.h"
 #include "search.h"
-#include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
-// idk man...
-#include <pthread.h>
+static const char *ENGINE_NAME = "Blobfish2";
 
 EngineContext *ctx;
 
-Board *board;
-
 typedef void (*_cmd_fn)(char *);
-
-bool is_alphanum(const char c) { return isalpha(c) || isdigit(c); }
-
-bool is_whitespace(const char c) { return c == ' ' || c == '\t'; }
-
-bool strings_equal(char *a, char *b) { return strcmp(a, b) == 0; }
-
-void eat_whitespace(char *line_buffer, int *i);
-
-bool eat_word(char *line_buffer, char *word_buffer, int *i);
 
 bool board_make_move_from_alg(Board *board, const char *algebraic);
 
@@ -52,14 +39,26 @@ void command_position(char *line_buffer);
 
 void command_quit(char *line_buffer);
 
+void command_test(char *line_buffer);
+
+void command_dump(char *line_buffer);
+
+void command_help(char *line_buffer);
+
 void engine_command(char *line_buffer) {
-#define COMMAND_COUNT 8
-  static char *commands[COMMAND_COUNT] = {"quit",     "uci",        "perft",
-                                          "position", "ucinewgame", "isready",
-                                          "go",       "stop"};
+#define COMMAND_COUNT 11
+  static char *commands[COMMAND_COUNT] = {
+      "quit",    "test", "uci",  "perft", "position", "ucinewgame",
+      "isready", "go",   "stop", "dump",  "help"};
   static const _cmd_fn command_functions[COMMAND_COUNT] = {
-      command_quit,       command_uci,     command_perft, command_position,
-      command_ucinewgame, command_isready, command_go,    command_stop};
+      command_quit,     command_test,       command_uci,     command_perft,
+      command_position, command_ucinewgame, command_isready, command_go,
+      command_stop,     command_dump,       command_help};
+
+  fprintf(ctx->log_fp, "INFO: GUI command `%.*s`\n",
+          (int)strlen(line_buffer) - 1, line_buffer);
+  fflush(ctx->log_fp);
+
   char command_name[64];
   int i = 0;
   eat_whitespace(line_buffer, &i);
@@ -67,67 +66,37 @@ void engine_command(char *line_buffer) {
   for (int k = 0; k < COMMAND_COUNT; k++) {
     if (strings_equal(command_name, commands[k])) {
       command_functions[k](line_buffer + i);
-      break;
+      return;
     }
   }
+  printf("Unknown command `%s`.\n", command_name);
 #undef COMMAND_COUNT
 }
 
-void eat_whitespace(char *line_buffer, int *i) {
-  while (1) {
-    const char c = line_buffer[*i];
-    if (!is_whitespace(c)) {
-      break;
-    }
-    (*i)++;
-  }
-}
-
-/**
- * Move the pointer along, filling word_buffer with the first found word, null
- * terminated. Consume all following whitespace.
- * Returns false if there isn't another word to eat (i.e. null terminator.)
- */
-bool eat_word(char *line_buffer, char *word_buffer, int *i) {
-  int k = 0;
-  while (1) {
-    const char c = line_buffer[*i];
-    if (is_whitespace(c)) {
-      break;
-    }
-    if (c == '\n') {
-      if (k == 0) // first character we're seeing is a newline
-        return false;
-      else
-        break;
-    }
-    word_buffer[k++] = c;
-    (*i)++;
-  }
-  word_buffer[k] = '\0';
-  eat_whitespace(line_buffer, i);
-  return true;
-}
-
 void *think(void *foo) {
-  search(board, &ctx->stop_thinking,
-         &ctx->best_move); // add engine context to params?
-  printf("info finished searching\n");
+  search_uci(ctx); // add engine context to params?
   char move_buf[16];
   move_to_string(ctx->best_move, move_buf);
   printf("bestmove %s\n", move_buf);
+  ctx->stop_thinking = true;
   return NULL;
 }
 
 void command_go(char *line_buffer) {
+  if (!ctx->stop_thinking)
+    return;
   ctx->stop_thinking = false;
-  pthread_create(&ctx->think_thread, NULL, think, (void *)NULL);
+  THREAD_CREATE(&ctx->think_thread, NULL, think, (void *)NULL);
 }
 
-void command_stop(char *line_buffer) {
-  ctx->stop_thinking = true;
-  pthread_join(ctx->think_thread, NULL);
+void stop_searching() {
+  if (!ctx->stop_thinking) {
+    ctx->stop_thinking = true;
+    THREAD_JOIN(ctx->think_thread, NULL);
+  }
 }
+
+void command_stop(char *line_buffer) { stop_searching(); }
 
 void command_perft(char *line_buffer) {
   // TODO: perft command
@@ -136,6 +105,8 @@ void command_perft(char *line_buffer) {
 
 void command_ucinewgame(char *line_buffer) {
   // not sure this is meaningful for us
+  // maybe the idea is that we clear hash tables and any other saved state from
+  // the 'previous game' probably safe to ignore
 }
 
 void command_isready(char *line_buffer) { printf("readyok\n"); }
@@ -144,49 +115,66 @@ void command_quit(char *line_buffer) { ctx->quit = true; }
 
 void command_position(char *line_buffer) {
   int i = 0;
-  memset(board, 0, sizeof(Board));
+  memset(ctx->board, 0, sizeof(Board));
   char word[16];
   eat_word(line_buffer, word, &i);
   if (strings_equal("fen", word)) {
-    fen_parse(board, line_buffer, &i);
+    fen_parse(ctx->board, line_buffer, &i);
   } else {
-    board_initialize_startpos(board);
+    board_initialize_startpos(ctx->board);
   }
   eat_word(line_buffer, word, &i);
   if (strings_equal("moves", word)) {
     while (eat_word(line_buffer, word, &i)) {
-      board_make_move_from_alg(board, word);
+      board_make_move_from_alg(ctx->board, word);
     }
   }
 }
 
 void command_uci(char *line_buffer) {
-  printf("id name Blobfish 0.0\n");
+  printf("id name %s 0.0\n", ENGINE_NAME);
   printf("id author Jerome Wei\n");
   printf("option name Foo type check default false\n");
-  // print options
   printf("uciok\n");
+}
+
+void command_dump(char *line_buffer) { dump_board(ctx->board); }
+
+void command_help(char *line_buffer) {
+  printf("%s is a simple chess engine made for educational purposes.\n",
+         ENGINE_NAME);
+  printf("See UCI protocol for usage information.\n");
+  printf("License and source code available TODO.\n");
+}
+
+void command_test(char *line_buffer) {
+  perft_performance_test();
+  // run tests
 }
 
 EngineContext *engine_get_context() { return ctx; }
 
 void engine_initialize() {
-  board = board_uninitialized();
-  board_initialize_startpos(board);
   ctx = malloc(sizeof(EngineContext));
+  ctx->board = board_uninitialized();
+  board_initialize_startpos(ctx->board);
+  ctx->stop_thinking = true;
   ctx->debug = false;
   ctx->quit = false;
+  ctx->log_fp = fopen("log.txt", "a");
+  fprintf(ctx->log_fp, "INFO: started new %s instance\n", ENGINE_NAME);
 }
 
 void engine_cleanup() {
+  free(ctx->board);
+  fclose(ctx->log_fp);
   free(ctx);
-  free(board);
 }
 
 /**
  * Given an algebraic move like "a2b1q", make the move on board.
  * This shouldn't be called within a loop.
- * TODO: promotions.
+ * TODO: promotions
  */
 bool board_make_move_from_alg(Board *board, const char *algebraic) {
   static char row_names[8] = {'1', '2', '3', '4', '5', '6', '7', '8'};

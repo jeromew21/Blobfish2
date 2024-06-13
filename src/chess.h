@@ -226,4 +226,4 @@ u64 bishop_moves(u32 source_idx, u64 occupancy_mask);
 
 u64 rook_moves(u32 source_idx, u64 occupancy_mask);
 
-u64 pawn_attacks(u64 source_bitset, u32 side);
+u64 pawn_attacks(u64 source_bitset, i32 side);

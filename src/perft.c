@@ -8,6 +8,7 @@
 PerftResults perft_helper(Board *board, int depth, int top_depth);
 
 void perft_performance_test() {
+  printf("Running perft(5) from startpos\n");
   struct timespec start, stop;
   Board *board = board_uninitialized();
   board_initialize_startpos(board);

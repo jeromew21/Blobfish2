@@ -25,3 +25,132 @@ uci
 uci
 go
 go
+go
+position startpos moves e2e4
+go
+debug
+hello
+fdass
+help
+test
+perft
+dump
+dump
+position fen dfaldskjas
+position startpos
+go
+dump
+position startpos moves b1c3
+dump
+position startpos moves e2e4
+dump
+help
+dump
+recieved command: help me
+
+recieved command: dasfhads
+
+recieved command: help
+
+recieved command: `hello
+`
+recieved command: `
+`
+INFO: started new instance
+INFO: GUI command `test`
+INFO: started new instance
+INFO: GUI command `test`
+INFO: GUI command `perft`
+INFO: GUI command `help`
+INFO: started new instance
+INFO: GUI command `go`
+INFO: GUI command `help`
+INFO: started new instance
+INFO: GUI command `help`
+INFO: started new instance
+INFO: GUI command `help`
+INFO: GUI command `heda dsafd`
+INFO: GUI command `helppasdfp`
+INFO: started new instance
+INFO: GUI command `laf`
+INFO: GUI command `dasf  adsfs`
+INFO: GUI command `adskdsjf`
+INFO: GUI command `   sdalfa adsf`
+INFO: started new instance
+INFO: GUI command `help`
+INFO: GUI command `go`
+INFO: GUI command `stop`
+INFO: started new instance
+INFO: GUI command `help`
+INFO: GUI command `go`
+INFO: GUI command `stop`
+INFO: started new instance
+INFO: GUI command `test`
+INFO: started new Blobfish2 instance
+INFO: GUI command `help`
+INFO: GUI command `git`
+INFO: GUI command `dsafda`
+INFO: GUI command `ls`
+INFO: GUI command `dump`
+INFO: GUI command `perft 4`
+INFO: GUI command `test`
+INFO: started new Blobfish2 instance
+INFO: GUI command `help`
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: GUI command `dump`
+INFO: GUI command `stop`
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `ho`
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go `
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command ``
+INFO: started new Blobfish2 instance
+INFO: GUI command `position startpos e2e4`
+INFO: GUI command `go`
+INFO: GUI command `dump`
+INFO: GUI command `position startpos moves e2e4`
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `position startpos moves e2e4`
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`

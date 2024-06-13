@@ -7,7 +7,7 @@ project(Blobfish
 set(blobfish_exe blobfish)
 add_executable(${blobfish_exe}
         src/bit_twiddling.c
-        src/fen_parse.c
+        src/fen.c
         src/debug.c
         src/perft.c
         src/evaluation.c
@@ -16,6 +16,7 @@ add_executable(${blobfish_exe}
         src/move_list.c
         src/move_make_unmake.c
         src/search.c
+        src/parse.c
         src/uci.c
         src/cli.c)
 
