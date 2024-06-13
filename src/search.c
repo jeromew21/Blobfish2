@@ -12,12 +12,16 @@ void search_uci(EngineContext *ctx) {
   ctx->best_move = move_list_get(&moves, 0);
   Board *board = ctx->board;
   while (1) {
+    if (ctx->stop_thinking)
+      return;
     Move best_move_found = move_list_get(&moves, 0);
     Move pv_move;
     Centipawns best_score_found = MIN_EVAL;
     Centipawns alpha = MIN_EVAL;
     Centipawns beta = -MIN_EVAL;
     for (int i = 0; i < moves.count; i++) {
+      if (ctx->stop_thinking)
+        return; // or at least, break out of the while loop
       Move mv = move_list_get(&moves, i);
       board_make_move(board, mv);
       Centipawns score = -search_recursive(board, -beta, -alpha, ply_depth,
@@ -27,14 +31,10 @@ void search_uci(EngineContext *ctx) {
         best_move_found = mv;
       }
       board_unmake(board);
-      if (ctx->stop_thinking)
-        return; // or at least, break out of the while loop
     }
     ctx->best_move = best_move_found;
     printf("info depth %i score cp %i\n", ply_depth + 1, best_score_found);
     ply_depth++;
-    if (ctx->stop_thinking)
-      return;
   }
 }
 
@@ -52,6 +52,9 @@ Centipawns qsearch(Board *board, Centipawns alpha, Centipawns beta,
 
   MoveList capture_moves = generate_capture_moves(board);
   for (int i = 0; i < capture_moves.count; i++) {
+    if (*stop) {
+      break;
+    }
     Move mv = move_list_get(&capture_moves, i);
     board_make_move(board, mv);
     Centipawns score = -qsearch(board, -beta, -alpha, stop);
@@ -61,9 +64,6 @@ Centipawns qsearch(Board *board, Centipawns alpha, Centipawns beta,
     }
     if (score > alpha) {
       alpha = score;
-    }
-    if (*stop) {
-      break;
     }
   }
   return alpha;
@@ -78,6 +78,10 @@ Centipawns search_recursive(Board *board, Centipawns alpha, Centipawns beta,
   MoveList moves = generate_all_legal_moves(board);
   Move best_move_found;
   for (int i = 0; i < moves.count; i++) {
+    if (*stop) {
+      // we don't care about the result here
+      break;
+    }
     Move mv = move_list_get(&moves, i);
     board_make_move(board, mv);
     Centipawns score =
@@ -92,10 +96,6 @@ Centipawns search_recursive(Board *board, Centipawns alpha, Centipawns beta,
     if (score > alpha) {
       alpha = score;
       best_move_found = mv;
-    }
-    if (*stop) {
-      // we don't care about the result here
-      break;
     }
   }
   (*pv_move) = best_move_found;
