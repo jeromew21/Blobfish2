@@ -15,16 +15,22 @@ MoveList generate_all_pseudo_legal_moves(Board *board);
  * TODO: optimize
  */
 MoveList generate_capture_moves(Board *board) {
-    MoveList captures = move_list_create();
-    MoveList legal = generate_all_legal_moves(board);
-    for (int i = 0; i < legal.count; i++) {
-        Move mv = move_list_get(&legal, i);
-        u32 md = move_get_metadata(mv);
-        if (md & CAPTURE_BIT_FLAG) {
-            move_list_push(&captures, mv);
-        }
+  MoveList captures = move_list_create();
+  MoveList legal = generate_all_legal_moves(board);
+  for (int i = 0; i < legal.count; i++) {
+    Move mv = move_list_get(&legal, i);
+    u32 md = move_get_metadata(mv);
+    if (md & CAPTURE_BIT_FLAG) {
+      move_list_push(&captures, mv);
     }
-    return captures;
+  }
+  return captures;
+}
+
+// TODO: optimize
+i32 board_legal_moves_count(Board *board) {
+  MoveList legal = generate_all_legal_moves(board);
+  return legal.count;
 }
 
 /**
@@ -46,6 +52,24 @@ MoveList generate_all_legal_moves(Board *board) {
     }
   }
   return legal;
+}
+
+bool board_is_check(Board *board) {
+  return is_attacked(board->_bitboard[board->_turn] & board->_bitboard[kKing],
+                     board->_bitboard, !board->_turn);
+}
+
+i32 board_status(Board *board) {
+  int legal_count = board_legal_moves_count(board);
+  if (legal_count == 0) {
+    bool check = board_is_check(board);
+    if (check) {
+      return kCheckmate;
+    }
+    return kStalemate;
+  }
+  // TODO draw by 3fold and 50 move rule
+  return kPlayOn;
 }
 
 MoveList generate_all_pseudo_legal_moves(Board *board) {
@@ -279,14 +303,11 @@ bool is_attacked(u64 bitset, u64 *bitboards, i32 attacking_color) {
   while (bitset) {
     const u32 target_idx = bitscan_forward(bitset);
     const u64 target_bit = (u64)1 << target_idx;
-    if (pawn_attacks(target_bit, !attacking_color) & enemy_mask &
-        bitboards[kPawn]) {
-      return true;
-    }
-    if (knight_moves(target_idx) & (enemy_mask & bitboards[kKnight])) {
-      return true;
-    }
-    if (king_moves(target_idx) & enemy_mask & bitboards[kKing]) {
+    const u64 pawn_attackers =
+        pawn_attacks(target_bit, !attacking_color) & bitboards[kPawn];
+    const u64 knight_attackers = knight_moves(target_idx) & bitboards[kKnight];
+    const u64 king_attackers = king_moves(target_idx) & bitboards[kKing];
+    if (enemy_mask & (pawn_attackers | knight_attackers | king_attackers)) {
       return true;
     }
     if (bishop_moves(target_idx, occupancy_mask) & enemy_mask &

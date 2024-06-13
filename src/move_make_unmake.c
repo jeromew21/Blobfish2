@@ -38,13 +38,7 @@ void bitboards_update(u64 *bitboards, i32 turn, Move mv) {
   const u64 src = move_get_src(mv);
   const u64 dest = move_get_dest(mv);
   const u32 move_metadata = move_get_metadata(mv);
-  if (move_metadata == kEnPassantMove) {
-    i32 offset = turn == kWhite ? -8 : 8;
-    i32 ep_removal_square = ((i32)move_get_dest_u32(mv)) + offset;
-    u64 ep_removal_bitset = (u64)1 << ep_removal_square;
-    bitboards[!turn] &= ~ep_removal_bitset;
-    bitboards[kPawn] &= ~ep_removal_bitset;
-  } else if (move_metadata & kCaptureMove) { // capture bit flag
+  if (move_metadata & kCaptureMove) { // capture bit flag
     for (int i = 2; i < 8; i++) {
       if (bitboards[!turn] & bitboards[i] & dest) {
         bitboards[!turn] &= ~dest;
@@ -53,27 +47,16 @@ void bitboards_update(u64 *bitboards, i32 turn, Move mv) {
       }
     }
   }
-  if (move_metadata == kEnPassantMove) {
-    bitboards[turn] &= ~src;
-    bitboards[turn] |= dest;
-    bitboards[kPawn] &= ~src;
-    bitboards[kPawn] |= dest;
-  } else if (move_metadata & PROMOTION_BIT_FLAG) {
-    bitboards[turn] &= ~src;
-    bitboards[turn] |= dest;
-    bitboards[kPawn] &= ~src;
-    if (move_metadata == kQueenPromotionMove ||
-        move_metadata == kQueenCapturePromotionMove) {
-      bitboards[kQueen] |= dest;
-    } else if (move_metadata == kBishopPromotionMove ||
-               move_metadata == kBishopCapturePromotionMove) {
-      bitboards[kBishop] |= dest;
-    } else if (move_metadata == kKnightPromotionMove ||
-               move_metadata == kKnightCapturePromotionMove) {
-      bitboards[kKnight] |= dest;
-    } else if (move_metadata == kRookPromotionMove ||
-               move_metadata == kRookCapturePromotionMove) {
-      bitboards[kRook] |= dest;
+  if (move_metadata == kQuietMove || move_metadata == kCaptureMove ||
+      move_metadata == kDoublePawnMove) {
+    for (int i = 2; i < 8; i++) {
+      if (bitboards[turn] & bitboards[i] & src) {
+        bitboards[turn] &= ~src;
+        bitboards[turn] |= dest;
+        bitboards[i] &= ~src;
+        bitboards[i] |= dest;
+        break;
+      }
     }
   } else if (move_metadata == kKingSideCastleMove ||
              move_metadata == kQueenSideCastleMove) {
@@ -97,16 +80,34 @@ void bitboards_update(u64 *bitboards, i32 turn, Move mv) {
     bitboards[kKing] |= dest;
     bitboards[kRook] &= ~rook_src;
     bitboards[kRook] |= rook_dest;
-  } else {
-    for (int i = 2; i < 8; i++) {
-      if (bitboards[turn] & bitboards[i] & src) {
-        bitboards[turn] &= ~src;
-        bitboards[turn] |= dest;
-        bitboards[i] &= ~src;
-        bitboards[i] |= dest;
-        break;
-      }
+  } else if (move_metadata & PROMOTION_BIT_FLAG) {
+    bitboards[turn] &= ~src;
+    bitboards[turn] |= dest;
+    bitboards[kPawn] &= ~src;
+    if (move_metadata == kQueenPromotionMove ||
+        move_metadata == kQueenCapturePromotionMove) {
+      bitboards[kQueen] |= dest;
+    } else if (move_metadata == kBishopPromotionMove ||
+               move_metadata == kBishopCapturePromotionMove) {
+      bitboards[kBishop] |= dest;
+    } else if (move_metadata == kKnightPromotionMove ||
+               move_metadata == kKnightCapturePromotionMove) {
+      bitboards[kKnight] |= dest;
+    } else if (move_metadata == kRookPromotionMove ||
+               move_metadata == kRookCapturePromotionMove) {
+      bitboards[kRook] |= dest;
     }
+  } else if (move_metadata == kEnPassantMove) {
+    i32 offset = turn == kWhite ? -8 : 8;
+    i32 ep_removal_square = ((i32)move_get_dest_u32(mv)) + offset;
+    u64 ep_removal_bitset = (u64)1 << ep_removal_square;
+    bitboards[!turn] &= ~ep_removal_bitset;
+    bitboards[kPawn] &= ~ep_removal_bitset;
+
+    bitboards[turn] &= ~src;
+    bitboards[turn] |= dest;
+    bitboards[kPawn] &= ~src;
+    bitboards[kPawn] |= dest;
   }
 }
 

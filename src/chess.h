@@ -47,6 +47,13 @@ enum Piece {
   kKing = 7,
 };
 
+enum BoardStatus {
+  kCheckmate,
+  kStalemate,
+  kDraw,
+  kPlayOn,
+};
+
 /**
  * 0b0000 means you are allowed to castle (with legal castling board state; i.e.
  * king and rook haven't moved yet). 1 in any slot means it's not allowed.
@@ -115,7 +122,7 @@ enum MoveMetadata {
  * as an upper bound.
  */
 typedef struct MoveList {
-  int count;
+  i32 count;
   Move _stack_data[MOVELIST_STACK_COUNT];
   // Move* _data;
   // int _data_capacity;
@@ -200,6 +207,8 @@ void board_initialize_startpos(Board *board);
 void fen_parse(Board *board, const char *fen, i32 *i);
 
 /* Board state */
+
+i32 board_legal_moves_count(Board *board);
 
 bool board_is_check(Board *board); // TODO
 

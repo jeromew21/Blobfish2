@@ -9,7 +9,6 @@
 typedef int32_t Centipawns;
 
 static const Centipawns MIN_EVAL = -100000;
-static const Centipawns MAX_EVAL = 100000;
 
 /* Evaluation */
 
@@ -19,7 +18,8 @@ Centipawns evaluation(Board *board, i32 side);
 
 void search_uci(EngineContext *ctx);
 
-void qsearch(Centipawns alpha, Centipawns beta);
+Centipawns qsearch(Board *board, Centipawns alpha, Centipawns beta,
+                   _Atomic(bool) *stop);
 
-Centipawns search_recursive(Board *board, Centipawns alpha, Centipawns beta, i32 depth,
-                     _Atomic(bool) *stop, Move *best_move);
+Centipawns search_recursive(Board *board, Centipawns alpha, Centipawns beta,
+                            i32 depth, _Atomic(bool) *stop, Move *best_move);

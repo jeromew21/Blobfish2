@@ -13,6 +13,7 @@
 #define THREAD pthread_t
 #define THREAD_CREATE pthread_create
 #define THREAD_JOIN pthread_join
+#define THREAD_DETACH pthread_detach
 #elif defined(_WIN32) || defined(WIN32)
 #include "windows.h"
 #define THREAD windows_thread_TODO
@@ -23,9 +24,9 @@ typedef struct EngineContext {
   bool debug;
   bool quit;
   Move best_move;
+  f64 think_time_ms;
   _Atomic(bool) stop_thinking;
   Board *board;
-  THREAD think_thread;
 } EngineContext;
 
 void engine_initialize(void);
