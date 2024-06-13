@@ -12,7 +12,7 @@ void read_input_into_buffer(char *line_buffer) {
   fgets(line_buffer, LINE_BUFFER_SIZE, stdin);
 }
 
-int main() {
+int main(void) {
   srand(0);
   setbuf(stdout, NULL);
   setbuf(stdin, NULL);

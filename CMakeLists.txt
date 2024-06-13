@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.23)
-project(Blobfish
+project(Blobfish2
         VERSION 1.0
         LANGUAGES C)
-
 
 set(blobfish_exe blobfish)
 add_executable(${blobfish_exe}

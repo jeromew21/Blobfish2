@@ -28,10 +28,10 @@ typedef struct EngineContext {
   THREAD think_thread;
 } EngineContext;
 
-void engine_initialize();
+void engine_initialize(void);
 
-void engine_cleanup();
+void engine_cleanup(void);
 
-EngineContext *engine_get_context();
+EngineContext *engine_get_context(void);
 
 void engine_command(char *line_buffer);

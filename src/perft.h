@@ -14,6 +14,6 @@ typedef struct PerftResults {
 
 PerftResults perft(Board *board, int depth);
 
-void perft_performance_test();
+void perft_performance_test(void);
 
 void perft_test_from_file(const char *filename, int maxdepth);

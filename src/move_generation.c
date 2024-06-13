@@ -12,6 +12,22 @@ typedef u32 (*bitscan_function)(u64);
 MoveList generate_all_pseudo_legal_moves(Board *board);
 
 /**
+ * TODO: optimize
+ */
+MoveList generate_capture_moves(Board *board) {
+    MoveList captures = move_list_create();
+    MoveList legal = generate_all_legal_moves(board);
+    for (int i = 0; i < legal.count; i++) {
+        Move mv = move_list_get(&legal, i);
+        u32 md = move_get_metadata(mv);
+        if (md & CAPTURE_BIT_FLAG) {
+            move_list_push(&captures, mv);
+        }
+    }
+    return captures;
+}
+
+/**
  * In the future, we might generate unchecking and/or special moves separately.
  */
 MoveList generate_all_legal_moves(Board *board) {

@@ -4,6 +4,7 @@
 
 void search_uci(EngineContext *ctx) {
   // TODO: multi threading
+  // TODO: search given X time
   // TODO: search subset of moves
   // when you stop, cancel the entire depth level, and return best move of
   // previous
@@ -18,13 +19,13 @@ void search_uci(EngineContext *ctx) {
     printf("info depth %i\n", ply_depth + 1);
     Move best_move_found;
     Move pv_move;
-    f64 best_score_found = MIN_EVAL;
-    f64 alpha = MIN_EVAL;
-    f64 beta = MAX_EVAL;
+    Centipawns best_score_found = MIN_EVAL;
+    Centipawns alpha = MIN_EVAL;
+    Centipawns beta = MAX_EVAL;
     for (int i = 0; i < moves.count; i++) {
       Move mv = move_list_get(&moves, i);
       board_make_move(board, mv);
-      f64 score = -search_recursive(board, -beta, -alpha, ply_depth,
+      Centipawns score = -search_recursive(board, -beta, -alpha, ply_depth,
                                     &ctx->stop_thinking, &pv_move);
       if (score > best_score_found) {
         best_score_found = score;
@@ -36,13 +37,13 @@ void search_uci(EngineContext *ctx) {
     }
     ctx->best_move = best_move_found;
     ply_depth++;
-    if (ply_depth > 3) {
+    if (ply_depth > 4) {
       break;
     }
   }
 }
 
-f64 search_recursive(Board *board, f64 alpha, f64 beta, i32 ply_depth,
+Centipawns search_recursive(Board *board, Centipawns alpha, Centipawns beta, i32 ply_depth,
                      _Atomic(bool) *stop, Move *pv_move) {
   if (ply_depth == 0) {
     // TODO: quiescience
@@ -53,7 +54,7 @@ f64 search_recursive(Board *board, f64 alpha, f64 beta, i32 ply_depth,
   for (int i = 0; i < moves.count; i++) {
     Move mv = move_list_get(&moves, i);
     board_make_move(board, mv);
-    f64 score =
+    Centipawns score =
         -search_recursive(board, -beta, -alpha, ply_depth - 1, stop, pv_move);
     board_unmake(board);
     if (score >= beta) {

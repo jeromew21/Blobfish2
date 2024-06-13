@@ -154,3 +154,88 @@ INFO: started new Blobfish2 instance
 INFO: GUI command `go`
 INFO: started new Blobfish2 instance
 INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: GUI command `test`
+INFO: GUI command `test`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test`
+INFO: GUI command `test`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `position fen rnbqkb1r/ppp3Pp/3p4/5p2/4P3/8/PPP2PPP/RNBQKBNR b KQkq - 0 5`
+INFO: started new Blobfish2 instance
+INFO: GUI command `position fen rnbqkb1r/ppp3Pp/3p4/5p2/4P3/8/PPP2PPP/RNBQKBNR b KQkq - 0 5`
+INFO: started new Blobfish2 instance
+INFO: GUI command `position fen rnbqkb1r/ppp3Pp/3p4/5p2/4P3/8/PPP2PPP/RNBQKBNR b KQkq - 0 5`
+INFO: GUI command `dump`
+INFO: GUI command `go`
+INFO: GUI command `position fen rnbqkb1r/pp4Pp/2pp4/5p2/4P3/8/PPP2PPP/RNBQKBNR w KQkq - 0 6`
+INFO: GUI command `go`
+INFO: GUI command `position fen 8/1P6/6k1/8/1P6/1K6/8/8 w - - 0 1`
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `position fen 8/1P6/6k1/8/1P6/1K6/8/8 w - - 0 1`
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `position startpos moves e2e4`
+INFO: GUI command `dump`
+INFO: started new Blobfish2 instance
+INFO: GUI command `position fen 8/1P6/6k1/8/1P6/1K6/8/8 w - - 0 1`
+INFO: GUI command `dump`
+INFO: GUI command `position fen 8/1P6/6k1/8/1P6/1K6/8/8 w - - 0 1 moves b7b8n`
+INFO: started new Blobfish2 instance
+INFO: GUI command `posiiton fen 8/1P6/6k1/8/1P6/1K6/8/8 w - - 0 1`
+INFO: GUI command `position fen 8/1P6/6k1/8/1P6/1K6/8/8 w - - 0 1`
+INFO: GUI command `position fen 8/1P6/6k1/8/1P6/1K6/8/8 w - - 0 1 moves b7b8q`
+INFO: GUI command `dump`
+INFO: GUI command `position fen 8/1P6/6k1/8/1P6/1K6/8/8 w - - 0 1 moves b7b8`
+INFO: GUI command ``
+INFO: GUI command ``
+INFO: GUI command ``
+INFO: GUI command ``
+INFO: GUI command `position fen position fen 8/1P6/6k1/8/1P6/1K6/8/8 w - - 0 1 moves b7b8q`
+INFO: GUI command `dump`
+INFO: GUI command `position fen 8/1P6/6k1/8/1P6/1K6/8/8 w - - 0 1 moves b7b8q`
+INFO: GUI command `dump`
+INFO: GUI command `position fen position fen 8/1P6/6k1/8/1P6/1K6/8/8 w - - 0 1 moves b7b8n`
+INFO: GUI command `dump`
+INFO: GUI command `position fen 8/1P6/6k1/8/1P6/1K6/8/8 w - - 0 1 moves b7b8n`
+INFO: GUI command `dump`
+INFO: started new Blobfish2 instance
+INFO: GUI command `position fen 8/1P6/6k1/8/1P6/1K6/8/8 w - - 0 1 moves b7b8q`
+INFO: GUI command `dump`
+INFO: started new Blobfish2 instance
+INFO: GUI command `help`
+INFO: GUI command `dump`
+INFO: GUI command ``
+INFO: GUI command ``
+INFO: GUI command `quit`
+INFO: started new Blobfish2 instance
+INFO: GUI command `brew install qt `
+INFO: GUI command `position fen 8/1P6/6k1/8/1P6/1K6/8/8 w - - 0 1 moves b7b8q`
+INFO: GUI command `dump`
+INFO: started new Blobfish2 instance
+INFO: GUI command `ff`
+INFO: GUI command `help`
+INFO: GUI command `'herllo`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test`

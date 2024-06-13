@@ -2,7 +2,7 @@
 
 // note that these builtins aren't portable.
 // there might be a different builtin somewhere
-// there is a way to drop into assembly but idk if that's a good idea
+// there is a way to drop into assembly but not sure if that's a good idea
 
 /**
  * Get index of first set bit from least significant direction.
@@ -34,9 +34,10 @@ i32 pop_count(u64 bitset) {
 }
 
 /**
- * return the i-th permutation of mask with pop_count members
+ * For magics generation
  *
- * original method by Tord Romstad with modifications
+ * Return the i-th permutation of mask with pop_count members
+ * Original method by Tord Romstad
  */
 u64 permute_mask(u64 mask, i32 index, i32 pop_count) {
   i32 i, j;

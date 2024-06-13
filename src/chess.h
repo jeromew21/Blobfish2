@@ -78,7 +78,6 @@ typedef struct Board {
   i32 _turn;
   i32 _ply;
   u64 _rook_start_positions;
-  u64 _king_start_positions;
   BoardMetadata _initial_state;
   BoardMetadata _state_stack[MAX_BOARD_STACK_DEPTH];
 } Board;
@@ -158,7 +157,7 @@ u32 move_get_metadata(Move mv);
 
 /* Move List */
 
-MoveList move_list_create();
+MoveList move_list_create(void);
 
 Move move_list_get(MoveList *list, i32 index);
 
@@ -168,9 +167,9 @@ void move_list_push(MoveList *list, Move mv);
 
 /* Move Generation */
 
-// MoveList generate_all_pseudo_legal_moves(Board *board);
-
 MoveList generate_all_legal_moves(Board *board);
+
+MoveList generate_capture_moves(Board *board);
 
 void bitboards_update(u64 *bitboards, i32 turn, Move mv);
 
@@ -192,7 +191,7 @@ u32 board_metadata_get_castling_rights(BoardMetadata *md);
 
 /* Board construction */
 
-Board *board_uninitialized();
+Board *board_uninitialized(void);
 
 void board_initialize_fen(Board *board, const char *fen);
 

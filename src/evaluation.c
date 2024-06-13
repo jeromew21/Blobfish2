@@ -13,8 +13,10 @@ f64 evaluate_king_safety(Board *board, i32 side);
 
 #define FEATURE_COUNT 3
 
-f64 evaluation(Board *board, i32 side) {
+Centipawns evaluation(Board *board, i32 side) {
     // Scale is centipawns
+    // 1 pawn is 100 cp
+    // 100 cp is +0.1
     static const evaluate_function eval_functions[FEATURE_COUNT] = {
             evaluate_material,
             evaluate_bishop_mobility,
@@ -24,7 +26,9 @@ f64 evaluation(Board *board, i32 side) {
             1.0,
             1.0,
             1.0,
-    }; // These might actually change based on game state but keep static const for now.
+    }; // These might actually want to change based on game state but keep static const for now.
+    // TODO check for terminal board state
+
     f64 features[FEATURE_COUNT];
     for (int i = 0; i < FEATURE_COUNT; i++) {
         features[i] = eval_functions[i](board, kWhite) - eval_functions[i](board, kBlack);
@@ -33,7 +37,8 @@ f64 evaluation(Board *board, i32 side) {
     for (int i = 0; i < FEATURE_COUNT; i++) {
         score += features[i] * weights[i];
     }
-    return side == kWhite ? score : -score;
+    Centipawns cp_score = (Centipawns) score;
+    return side == kWhite ? cp_score : -cp_score;
 }
 
 #undef FEATURE_COUNT
