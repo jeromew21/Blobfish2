@@ -16,12 +16,15 @@ add_executable(${blobfish_exe}
         src/move_make_unmake.c
         src/search.c
         src/parse.c
+        src/puzzle_test.c
         src/uci.c
         src/cli.c)
 
 if(MSVC)
   target_compile_options(${blobfish_exe} PRIVATE /W4 /WX)
 else()
+  set(CMAKE_CXX_FLAGS_DEBUG "-g")
+  set(CMAKE_CXX_FLAGS_RELEASE "-O3")
   target_compile_options(${blobfish_exe} PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 

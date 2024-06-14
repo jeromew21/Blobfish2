@@ -15,11 +15,6 @@ void parse_halfmove_clock(Board *board, const char *fen, i32 *i);
 
 void parse_fullmove_counter(Board *board, const char *fen, i32 *i);
 
-Board *board_uninitialized(void) {
-    Board *board = calloc(1, sizeof(Board));
-    return board;
-}
-
 /**
  * Create board with basic start position.
  */
@@ -38,6 +33,7 @@ void board_initialize_fen(Board *board, const char *fen) {
     memset(board, 0, sizeof(Board));
     i32 i = 0;
     fen_parse(board, fen, &i);
+    board->_initial_state._hash = board_position_hash(board);
 }
 
 void fen_parse(Board *board, const char *fen, i32 *i) {

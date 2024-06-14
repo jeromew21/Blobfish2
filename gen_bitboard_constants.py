@@ -1,4 +1,6 @@
 import datetime
+import random
+
 FILENAME = "bitboard_constants.h"
 
 def in_bounds(x):
@@ -100,8 +102,27 @@ def write_knight_moves(f):
         board[source] = 0
         f.write("\t")
         write_binary_hex(board, f)
-        f.write(",\n")          
+        f.write(",\n")
     f.write("};\n\n")
+
+
+def write_zobrist_keys(f):
+    f.write("static const u64 ZOBRIST_KEYS[781] = {\n")
+    for source in range(781):
+        board = [random.randint(0, 1) for _ in range(64)]
+        f.write("\t")
+        write_binary_hex(board, f)
+        f.write(",\n")          
+    f.write("};\n")
+    f.write("""
+    
+static const i32 ZOBRIST_BLACK_TO_MOVE = 768;
+
+static const i32 ZOBRIST_CASTLING = 769;
+
+static const i32 ZOBRIST_EN_PASSANT = 773;
+
+    """)
 
 
 def write_binary_hex(board, f):
@@ -118,3 +139,4 @@ if __name__ == "__main__":
         write_king_moves(f)
         write_bishop_moves(f)
         write_rook_moves(f)
+        write_zobrist_keys(f)

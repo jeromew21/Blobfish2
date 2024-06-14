@@ -1,7 +1,11 @@
 .vscode
 build
+build-release
+build-debug
 venv
 cmake-build-debug
+cmake-build-release
+.bak
 .idea
 .DS_Store
 *.svg

@@ -11,7 +11,10 @@ Lichess puzzle requirements: puzzle database downloaded and extracted from https
 
 ## Building
 Ease of building Blobfish2 and portability is a goal.
-- There is a `CMakeLists.txt`.
+
+### CMake
+
+Building in release mode: `cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release`
 
 ## Pitfalls
 - In haste, there are a lot of infinite loops in parsing.

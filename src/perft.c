@@ -12,7 +12,7 @@ void perft_performance_test(void) {
     u64 *timer_data = malloc(sizeof(u64) * n);
     printf("Running perft(5) from start position %i times\n", n);
     u64 correct = 4865609;
-    Board *board = board_uninitialized();
+    Board *board = calloc(1, sizeof(Board));
     for (int i = 0 ; i < n; i++) {
         struct timespec start, stop;
         board_initialize_startpos(board);
@@ -68,7 +68,7 @@ bool perft_test_line(char *line, int max_depth) {
         i++;
     }
     int depth, count;
-    Board *board = board_uninitialized();
+    Board *board = calloc(1, sizeof(Board));
     board_initialize_fen(board, line);
     int cases = 0;
     int passes = 0;
@@ -115,7 +115,7 @@ void perft_test_from_file(const char *filename, int max_depth) {
 #undef LINE_BUFFER_SIZE
     fclose(fp);
     if (passes == cases) {
-        printf("Passed all Perft test cases.");
+        printf("Passed all Perft test cases.\n");
     }
 }
 

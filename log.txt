@@ -362,3 +362,48 @@ INFO: started new Blobfish2 instance
 INFO: GUI command `go`
 INFO: GUI command `otp`
 INFO: GUI command `stop`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: GUI command `stop`
+INFO: GUI command `test puzzles`
+INFO: GUI command `test perft`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: GUI command `stop`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test`
+INFO: GUI command `test perft`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test performance`
+INFO: started new Blobfish2 instance
+INFO: GUI command ``
+INFO: GUI command `go`
+INFO: GUI command `sstop`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test performance`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test performance`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test performacne`
+INFO: GUI command `test performance`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test performance`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test performacne`
+INFO: GUI command `test performance`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test performance`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test performance`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test perf`
+INFO: GUI command `test performance`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test perf`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test perf`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test perft`
+INFO: GUI command `'=`
