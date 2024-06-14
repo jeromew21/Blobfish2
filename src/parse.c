@@ -1,6 +1,6 @@
 #include "parse.h"
 
-bool is_alphanum(const char c) { return isalpha(c) || isdigit(c); }
+//bool is_alphanum(const char c) { return isalpha(c) || isdigit(c); }
 
 bool is_whitespace(const char c) { return c == ' ' || c == '\t'; }
 

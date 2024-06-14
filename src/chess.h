@@ -210,9 +210,9 @@ void fen_parse(Board *board, const char *fen, i32 *i);
 
 i32 board_legal_moves_count(Board *board);
 
-bool board_is_check(Board *board); // TODO
+bool board_is_check(Board *board);
 
-i32 board_status(Board *board); // TODO: checkmate, stalemate, 50 move, etc.
+i32 board_status(Board *board); // TODO: 3-fold, 50 move, etc.
 
 /* Board Modifiers*/
 
@@ -235,3 +235,5 @@ u64 bishop_moves(u32 source_idx, u64 occupancy_mask);
 u64 rook_moves(u32 source_idx, u64 occupancy_mask);
 
 u64 pawn_attacks(u64 source_bitset, i32 side);
+
+u64 pawn_forward_moves(u64 source_bitset, i32 side);

@@ -350,3 +350,15 @@ INFO: GUI command `go movetime 1000`
 INFO: started new Blobfish2 instance
 INFO: GUI command `position startpos moves b1c3 g8f6 e2e4 d7d5 e4d5 c7c6 d5c6 e7e6 c6b7 c8b7 g1f3 f8d6 d2d4 e8g8 f3e5 b8d7 c1f4 d6b4 e5d7 d8d7 d1d3 b7e4 d3d2 d7b7 f2f3 e4g6 f1d3 f8c8 a2a3 b4a5 e1c1 a5c3 b2c3 f6d5 c3c4 b7a6 c4d5 a6a3 c1b1 c8b8 f4b8 a8b8 d3b5 b8b5`
 INFO: GUI command `go movetime 1000`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: GUI command `otp`
+INFO: GUI command `stop`

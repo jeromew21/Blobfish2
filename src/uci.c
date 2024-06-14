@@ -140,7 +140,6 @@ void command_go(char *line_buffer) {
       ctx->think_time_ms = FLT_MAX;
     }
   }
-  // printf("info calculated move think time = %f ms", ctx->think_time_ms);
   ctx->stop_thinking = false;
   THREAD think_timer_thread;
   THREAD_CREATE(&think_timer_thread, NULL, think_timer, (void *)NULL);

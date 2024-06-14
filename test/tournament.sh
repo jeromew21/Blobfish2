@@ -4,7 +4,7 @@ readonly ELO1350=1350
 readonly ELO1750=1750
 readonly ELO2000=2000
 readonly rounds=10
-readonly tc="40/10"
+readonly tc="40/60"
 readonly blobfish_engine="-engine cmd=blobfish name=Blobfish2"
 readonly elo_limited_engine="-engine cmd=stockfish name=Stockfish${ELO1350} option.UCI_LimitStrength=true option.UCI_Elo=${ELO1350}"
 readonly elo_limited_engine1750="-engine cmd=stockfish name=Stockfish${ELO1750} option.UCI_LimitStrength=true option.UCI_Elo=${ELO1750}"

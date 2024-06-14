@@ -41,11 +41,9 @@ void search_uci(EngineContext *ctx) {
 Centipawns qsearch(Board *board, Centipawns alpha, Centipawns beta,
                    _Atomic(bool) *stop) {
   int stand_pat = evaluation(board, board->_turn);
-  /*
   if (stand_pat >= beta) {
     return beta;
     }
-    */
   if (alpha < stand_pat) {
     alpha = stand_pat;
   }
