@@ -70,7 +70,7 @@ void dump_bitboard(u64 *bitboards) {
     }
 }
 
-void dump_board(Board *board) {
+void board_dump(Board *board) {
     printf("======== board dump ========\n");
     BoardMetadata *md = board_metadata_peek(board, 0);
     printf("Ply: %i\n", board->_ply);

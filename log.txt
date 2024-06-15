@@ -407,3 +407,196 @@ INFO: GUI command `test perf`
 INFO: started new Blobfish2 instance
 INFO: GUI command `test perft`
 INFO: GUI command `'=`
+INFO: started new Blobfish2 instance
+INFO: GUI command `help`
+INFO: GUI command ``
+INFO: GUI command `quit`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go movetime 1`
+INFO: GUI command `go movetime 1000`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: GUI command `hlep`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: GUI command ``
+INFO: GUI command `stop`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go wtime 1000`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go wtime 1000`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go wtime 1000`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: GUI command `stop`
+INFO: GUI command `go wtime 1000`
+INFO: GUI command `go wtime 6000`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go movetime 1000`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go infinite`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go infinite`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test puzzles`
+INFO: GUI command `test puzzles`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go movetime 1000`
+INFO: GUI command `go movetime 1000`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go movetime 1000`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`
+INFO: GUI command `go`

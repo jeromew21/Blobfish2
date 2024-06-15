@@ -1,8 +1,7 @@
 #include "uci.h"
 #include "chess.h"
 #include "parse.h"
-#include "perft.h"
-#include "puzzle_test.h"
+#include "test.h"
 #include "search.h"
 #include <float.h>
 #include <stdbool.h>
@@ -96,7 +95,7 @@ void *think_timer(void *_unused) {
 }
 
 void *think(void *_unused) {
-    search_uci(ctx);
+    search(ctx->board, &ctx->best_move, &ctx->stop_thinking, stdout);
     char move_buf[16];
     move_to_string(ctx->best_move, move_buf);
     printf("bestmove %s\n", move_buf);
@@ -111,14 +110,14 @@ void command_go(char *line_buffer) {
     if (!ctx->stop_thinking) // ignore if already going
         return;
     ctx->stop_thinking = false;
-    i32 arguments[4] = {-1, -1, -1, (int) FLT_MAX};
+    i32 arguments[4] = {-1, -1, -1, -1};
     int i = 0;
     char word_buffer[64];
     char arg_buffer[64];
+    // TODO: this is not perfect, but works?
     while (eat_word(line_buffer, word_buffer, &i)) {
         if (strings_equal("infinite", word_buffer)) {
             // well,,, technically, not infinite...
-            arguments[kMoveTime] = (int) FLT_MAX;
             break;
         } else if (strings_equal("wtime", word_buffer)) {
             eat_word(line_buffer, arg_buffer, &i);
@@ -134,18 +133,17 @@ void command_go(char *line_buffer) {
             arguments[kMovesToGo] = atoi(arg_buffer);
         }
     }
-    if (arguments[kMoveTime] > 0) {
+    f64 moves_to_go = arguments[kMovesToGo] > 0 ? arguments[kMovesToGo] : 10;
+    if (ctx->board->_turn == kWhite && arguments[kWTime] > 0) {
+        ctx->think_time_ms = (f64) arguments[kWTime] / moves_to_go;
+    } else if (ctx->board->_turn == kBlack && arguments[kBTime] > 0) {
+        ctx->think_time_ms = (f64) arguments[kBTime] / moves_to_go;
+    } else if (arguments[kMoveTime] > 0) {
         ctx->think_time_ms = (f64) arguments[kMoveTime];
-    } else { // TODO: default moves-to-go
-        f64 moves_to_go = arguments[kMovesToGo] > 0 ? arguments[kMovesToGo] : 10;
-        if (ctx->board->_turn == kWhite && arguments[kWTime] > 0) {
-            ctx->think_time_ms = (f64) arguments[kWTime] / moves_to_go;
-        } else if (ctx->board->_turn == kBlack && arguments[kBTime] > 0) {
-            ctx->think_time_ms = (f64) arguments[kBTime] / moves_to_go;
-        } else {
-            ctx->think_time_ms = FLT_MAX;
-        }
+    } else {
+        ctx->think_time_ms = FLT_MAX;
     }
+    //printf("info decided to think for %i ms\n", (int) ctx->think_time_ms);
     ctx->stop_thinking = false;
     THREAD think_timer_thread;
     THREAD_CREATE(&think_timer_thread, NULL, think_timer, (void *) NULL);
@@ -208,7 +206,7 @@ void command_uci(char *line_buffer) {
     printf("uciok\n");
 }
 
-void command_dump(char *line_buffer) { dump_board(ctx->board); }
+void command_dump(char *line_buffer) { board_dump(ctx->board); }
 
 void command_help(char *line_buffer) {
     printf("%s is a simple chess engine made for educational purposes.\n",
@@ -286,7 +284,7 @@ bool board_make_move_from_alg(Board *board, const char *algebraic) {
                 break;
             default:
                 printf("failed to find alg\n");
-                exit(1);
+                exit(44);
         }
     }
     u32 idx_src = r0 * 8 + c0;
@@ -316,32 +314,9 @@ bool board_make_move_from_alg(Board *board, const char *algebraic) {
         }
     }
     if (!found) {
-        exit(1);
+        exit(23);
     }
     board_make_move(board, mv);
     return true;
 }
 
-/*
- * Buffer must be at least 6 characters long to account for null terminator.
- */
-void move_to_string(Move mv, char *buf) {
-    static char row_names[8] = {'1', '2', '3', '4', '5', '6', '7', '8'};
-    static char col_names[8] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'};
-    u32 src = move_get_src_u32(mv);
-    u32 dest = move_get_dest_u32(mv);
-    char special[4];
-    special[0] = '\0';
-    u32 md = move_get_metadata(mv);
-    if (md == kQueenPromotionMove || md == kQueenCapturePromotionMove) {
-        sprintf(special, "%s", "q");
-    } else if (md == kKnightPromotionMove || md == kKnightCapturePromotionMove) {
-        sprintf(special, "%s", "n");
-    } else if (md == kBishopPromotionMove || md == kBishopCapturePromotionMove) {
-        sprintf(special, "%s", "b");
-    } else if (md == kRookPromotionMove || md == kRookCapturePromotionMove) {
-        sprintf(special, "%s", "r");
-    }
-    sprintf(buf, "%c%c%c%c%s", col_names[src % 8], row_names[src / 8],
-            col_names[dest % 8], row_names[dest / 8], special);
-}

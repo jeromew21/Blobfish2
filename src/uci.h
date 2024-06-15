@@ -36,3 +36,5 @@ void engine_cleanup(void);
 EngineContext *engine_get_context(void);
 
 void engine_command(char *line_buffer);
+
+bool board_make_move_from_alg(Board *board, const char *algebraic);

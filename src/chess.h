@@ -133,7 +133,7 @@ typedef struct MoveList {
 
 void dump_u64(u64 bitset);
 
-void dump_board(Board *board);
+void board_dump(Board *board);
 
 void dump_bitboard(u64 *bitboards);
 

@@ -1,5 +1,5 @@
 #include "chess.h"
-#include "perft.h"
+#include "test.h"
 #include "uci.h"
 #include <stdio.h>
 #include <stdlib.h>

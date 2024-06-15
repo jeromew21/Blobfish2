@@ -16,10 +16,5 @@ Centipawns evaluation(Board *board, i32 side);
 
 /* Search */
 
-void search_uci(EngineContext *ctx);
-
-Centipawns qsearch(Board *board, Centipawns alpha, Centipawns beta,
-                   _Atomic(bool) *stop);
-
-Centipawns search_recursive(Board *board, Centipawns alpha, Centipawns beta,
-                            i32 depth, _Atomic(bool) *stop, Move *best_move);
+// TODO: input file...
+void search(Board* board, Move* best_move, _Atomic(bool) *stop_thinking, FILE* outfile);

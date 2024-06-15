@@ -1,4 +1,4 @@
-#include "perft.h"
+#include "test.h"
 #include "chess.h"
 #include <stdbool.h>
 #include <stdlib.h>
@@ -10,7 +10,7 @@ PerftResults perft_helper(Board *board, int depth, int top_depth);
 void perft_performance_test(void) {
     const int n = 10;
     u64 *timer_data = malloc(sizeof(u64) * n);
-    printf("Running perft(5) from start position %i times\n", n);
+    printf("Running and checking perft(5) from start position, %i times\n", n);
     u64 correct = 4865609;
     Board *board = calloc(1, sizeof(Board));
     for (int i = 0 ; i < n; i++) {
@@ -101,7 +101,7 @@ void perft_test_from_file(const char *filename, int max_depth) {
     char buffer[LINE_BUFFER_SIZE];
     fp = fopen(filename, "r");
     if (fp == NULL) {
-        printf("Test case file does not exist.");
+        printf("Error opening test case file.");
         return;
     }
     int cases = 0;
