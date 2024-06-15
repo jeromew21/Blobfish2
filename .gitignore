@@ -13,3 +13,9 @@ cmake-build-release
 *.zst
 log.txt
 *.log
+*.aux
+*.fdb_latexmk
+*.fls
+*.pdf
+*.synctex.gz
+*.toc
