@@ -3,12 +3,12 @@
 #include <float.h>
 
 Centipawns search_recursive(Board *board, Centipawns alpha, Centipawns beta,
-                            i32 depth, _Atomic(bool) *stop, Move *best_move, u64 *nodes_searched);
+                            i32 depth, AtomicBool *stop, Move *best_move, u64 *nodes_searched);
 
 Centipawns qsearch(Board *board, Centipawns alpha, Centipawns beta,
-                   _Atomic(bool) *stop, u64 *nodes_searched);
+                   AtomicBool *stop, u64 *nodes_searched);
 
-void search(Board* board, Move* best_move, _Atomic(bool) *stop_thinking, FILE *outfile) {
+void search(Board* board, Move* best_move, AtomicBool *stop_thinking, FILE *outfile) {
     // TODO: multi threading
     // TODO: search subset of moves
     // TODO: don't return best move in recursive impl, use root node search
@@ -59,7 +59,7 @@ void search(Board* board, Move* best_move, _Atomic(bool) *stop_thinking, FILE *o
 }
 
 Centipawns qsearch(Board *board, Centipawns alpha, Centipawns beta,
-                   _Atomic (bool) *stop, u64 *nodes_searched) {
+                   AtomicBool *stop, u64 *nodes_searched) {
     (*nodes_searched)++;
     int stand_pat = evaluation(board, board->_turn);
     if (stand_pat >= beta) {
@@ -88,7 +88,7 @@ Centipawns qsearch(Board *board, Centipawns alpha, Centipawns beta,
 }
 
 Centipawns search_recursive(Board *board, Centipawns alpha, Centipawns beta,
-                            i32 ply_depth, _Atomic (bool) *stop, Move *pv_move, u64 *nodes_searched) {
+                            i32 ply_depth, AtomicBool *stop, Move *pv_move, u64 *nodes_searched) {
     (*nodes_searched)++;
     if (ply_depth == 0) {
         return qsearch(board, alpha, beta,

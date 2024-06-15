@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include "parse.h"
 
-static _Atomic (bool) stop_thinking;
+static AtomicBool stop_thinking;
 static Move best_move;
 static u64 think_ms;
 
@@ -109,7 +109,8 @@ void puzzle_test(const char *puzzle_db_csv) {
         i++;
         //break;
     }
-    printf("%i/%i puzzles correct first move (%0.2f percent)\n", correct, total, 100.0*(float)correct / (float)total);
+    printf("%i/%i puzzles correct first move (%0.2f percent)\n", correct, total,
+           100.0 * (float) correct / (float) total);
     free(board);
 #undef LINE_BUFFER_SIZE
 }

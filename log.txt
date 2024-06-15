@@ -600,3 +600,12 @@ INFO: GUI command `go`
 INFO: GUI command `go`
 INFO: GUI command `go`
 INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: GUI command `stop`
+INFO: started new Blobfish2 instance
+INFO: GUI command `go`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test perft`
+INFO: started new Blobfish2 instance
+INFO: GUI command `test perf`

@@ -25,7 +25,7 @@ typedef struct EngineContext {
   bool quit;
   Move best_move;
   f64 think_time_ms;
-  _Atomic(bool) stop_thinking;
+  AtomicBool stop_thinking;
   Board *board;
 } EngineContext;
 

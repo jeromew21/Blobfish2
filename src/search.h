@@ -17,4 +17,4 @@ Centipawns evaluation(Board *board, i32 side);
 /* Search */
 
 // TODO: input file...
-void search(Board* board, Move* best_move, _Atomic(bool) *stop_thinking, FILE* outfile);
+void search(Board* board, Move* best_move, AtomicBool *stop_thinking, FILE* outfile);

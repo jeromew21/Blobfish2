@@ -27,7 +27,7 @@ bool eat_word(char *line_buffer, char *word_buffer, int *i) {
       break;
     }
     if (c == '\n' || c == '\0') {
-      if (k == 0) // first character we're seeing is a newline
+      if (k == 0)
         return false;
       else
         break;

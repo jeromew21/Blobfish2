@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdatomic.h>
 
 /* https://www.chessprogramming.org/Square_Mapping_Considerations#LittleEndianRankFileMapping
  */
@@ -16,6 +17,8 @@ typedef uint32_t u32;
 typedef int32_t i32;
 
 typedef double f64;
+
+typedef _Atomic (bool) AtomicBool;
 
 static const i32 PROMOTION_BIT_FLAG = 0x8;
 
@@ -66,9 +69,8 @@ enum CastlingRights {
 };
 
 /**
- * These are stored in the stack.
- * We really want to shrink the size of this for ease of use.
- * Looks like we could make it a single 32-bit integer.
+ * These are stored in the stack, not to be un-made, rather popped off.
+ * Hashing is one thing that might benefit from being unmade.
  */
 typedef struct BoardMetadata {
     u64 _hash;
@@ -213,7 +215,7 @@ bool board_is_check(Board *board);
 
 i32 board_status(Board *board); // TODO: 3fold, 50 move, etc.
 
-u64 board_position_hash(Board* board);
+u64 board_position_hash(Board *board);
 
 /* Board Modifiers*/
 
