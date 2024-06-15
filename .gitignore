@@ -11,3 +11,5 @@ cmake-build-release
 *.svg
 *.csv
 *.zst
+log.txt
+*.log
