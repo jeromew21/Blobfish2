@@ -1,5 +1,10 @@
-\documentclass{article}
-\usepackage[legalpaper, margin=1.5in]{geometry}
+% \documentclass{article}
+\documentclass[letterpaper,11pt]{article}
+\usepackage[margin=1in,footskip=0.25in]{geometry}
+
+\usepackage[parfill]{parskip} % this makes paragraph indentation consistent
+\usepackage{amsthm, amssymb, amsmath} % math packages
+\usepackage{hyperref}
 \usepackage{graphicx} % Required for inserting images
 \usepackage[T1]{fontenc}
 \usepackage{palatino}
@@ -16,6 +21,7 @@
 
 \newpage
 \part{Introduction}
+
 Wherever computing goes, chess programming goes too.
 
 From the original Mechanical Turk to Deep Blue to Stockfish NNUE, chess programs have been a fascination in popular culture as well as nerd culture.
@@ -32,9 +38,13 @@ I think I've been chasing this feeling of freedom ever since.
 
 We will be writing a chesse engine in C. This project will be split into three parts, beginner, intermediate, and advanced.
 
-You might ask why we are using a low level language if this is a learning book. To that I would have two responses. One, I would look to my above rant and note that I want to fight against the culture of downloading someone else's solution to a problem. Sure, we could download a Python package and call it a day. But where's the fun in that? Second, I would respond by asking, "What's the purpose of a chess engine?" The answer is "Win". And to win in chess, you need to out-calculate your opponent. Thus performance seriously matters in a chess engine.
+You might ask why we are using a low level language if this is a learning book. To that I would have two responses. 
+One, I would look to my above rant and note that I want to fight against the culture of downloading someone else's solution to a problem. Sure, we could download a Python package and call it a day. But where's the fun in that? Second, I would respond by asking, "What's the purpose of a chess engine?" The answer is "Win". And to win in chess, you need to out-calculate your opponent. Thus performance seriously matters in a chess engine.
 
-I haven't measured, but would guess that the performance of Java or Rust (or one of the many new C alternatives) would be acceptable for a strong chess engine. I chose C over one of those languages mainly due to (possibly marginal) performance advantage and compiler maturity (GCC is far older than I am, Clang/LLVM is an awesome project, and MSVC... exists). C is also accepted in the computer chess community (although C++ is apparently more popular there).
+I haven't measured, but would guess that the performance of Java or Rust (or one of the many new C alternatives) 
+would be acceptable for a strong chess engine. I chose C over one of those languages mainly due to (possibly marginal) 
+performance advantage and compiler maturity (GCC is far older than I am, Clang/LLVM is an awesome project, and MSVC... exists). 
+C is also accepted in the computer chess community (although C++ is seemingly more popular there).
 
 For this project, we assume you have experience with C.
 We are forgoing C++ for several reasons:
@@ -61,23 +71,42 @@ Expect there to be some conditional compilation flags and preprocessor macros.
 \item No compile-time code.
 \item Security. I guess it’s possible that if we have a buffer overflow vulnerability and expose the engine on the internet, maybe an attacker can hijack our server to mine bitcoin.
 \end{itemize}
-Yes, it is my opinion that object-oriented programming is bad, when defined as "No free functions and no global variables, everything must be in a class and there is an inheritance hierarchy". Looser definitions I'm OK with---of course, named struct types and fields are an essential part of any imperative language. 
 
-I use CMake which is a tool to generates build files for all of the major platforms/compilers. Kind of like a build-system-build-system. This isn't too important; if you prefer Makefiles or using Visual Studio natively everything should work fine. My preferred setup for writing C is CLion+Linux, though macOS works fine as well. 
+Yes, it is my opinion that object-oriented programming is bad, when defined as 
+``No free functions and no global variables, everything must be in a class and there is an inheritance hierarchy``.
+Looser definitions I'm OK with---of course, 
+named struct types and fields are an essential part of any imperative language. 
 
-\newpage
+I use CMake, which is a tool to generate build files for all of the major platforms/compilers. 
+Kind of like a build-system-build-system. This isn't too important; if you prefer Makefiles or 
+using Visual Studio natively everything should work fine. 
+My preferred setup for writing C is CLion+Linux, though macOS works fine as well. 
+
 \part{Beginner}
+
 At the end of this part, you will have a working chess engine that sits around 1800-2000 ELO. 
 
 \section{Project Setup}
 
+Let's set up the environment.
+
 \section{Game State}
-\subsection{Bit Twiddling}
+
+Let's make a struct to represent a board position.
+
 \subsection{Bitboards}
+
+It can be difficult to wrap your head around bitboards at first. Let's begin by having a glance at 
+how set operations map onto bitwise operators.
+
+\subsection{Bit Twiddling}
 \subsection{Parsing FEN}
 \subsection{Exercises}
 
 \section{Move Generation}
+
+In this section, we generate possible moves given a position.
+
 \subsection{Making and Unmaking}
 \subsection{Captures}
 \subsection{Castling}
@@ -87,87 +116,157 @@ At the end of this part, you will have a working chess engine that sits around 1
 \subsection{Exercises}
 
 \section{Testing}
+
+Let's test and benchmark our move generation.
+
 \subsection{Perft}
 \subsection{Benchmarking}
 \subsection{Exercises}
 
-\section{Evaluation}
+\section{Static Evaluation}
+
+Now, we want to score a position based on how good it is. We won't do any tree searching yet.
+
 \subsection{Material}
 \subsection{King Safety}
 \subsection{Pieces}
 \subsection{Exercises}
 
 \section{Search}
+
+In this chapter we will begin implementing our game tree search.
+
 \subsection{Minimax}
 \subsection{Alpha-Beta}
 \subsection{Iterative Deepening}
 \subsection{Exercises}
 
 \section{UCI Protocol}
+
+Let's take a quick detour and get our engine communicating with the outside world.
+
 \subsection{Parsing Input}
 \subsection{Interrupting Search}
-\section{Exercises}
+\subsection{Exercises}
 
 \section{Strength Estimation}
+
+In this chapter, we'll implement some important testing benchmarks, most importantly asking,
+how good at chess are we?
+
 \subsection{ELO Estimation}
 \subsection{Puzzles}
 \subsection{Exercises}
 
 \section{Quiescence Search}
 
+If you've been playing or watching the engine play so far, you might notice it blunders a lot. This is our first 
+exposure to the eternal problem with depth-limited game tree search: the dreaded horizon effect.
+
 \subsection{Horizon Effect}
+
+\subsection{Exercises}
+
+\section{Transposition Tables}
+
 At this point, I ran 1000 games of the engine versus Stockfish set to an ELO limited to 1320. The results concluded that the engine's ELO is ~1200.
 
 A couple major issues is that it falls for repetitions, and also does not distinguish between Mate-in-N. Furthermore, on short time controls (say 1 second per move) it often fails to find good moves, because it can't calculate deep enough in such a small time. These will both be covered in later chapters.
 
-\section{Transposition Tables}
-
-We need a way to hash our current board state in order to index into a hash table. This should speed up our search at the expense of some space.
-The process of doing so ends up being somewhat tricky, but will have more benefits than optimization--- it will allow us to do repetition checking easily, as well will see soon.
+We would a way to place our board state into a hash table, in order to memoize previous search results. This should speed up our search at the expense of some space.
+The process of doing so ends up being somewhat tricky, but will have more benefits than just optimization. For one, having a board state hashing function 
+will allow us to do repetition checking easily, as well will see soon. Another reason is that it has synergy with iterative deepening search: on the next iteration, in theory the search picks up right where it left off!
 
 \subsection{Zobrist Hashing}
-\subsection{Testing Hashing}
+
+Here's our hashing function.
+
+\subsection{Testing Hash Function}
+
+It's easy to write bugs related to hashing so let's figure out a way to test our hash function.
+
+\subsection{Hash Table}
+
 \subsection{Exercises}
 
 \section{Additional Rules}
+
 We are now on the final chapter of Part 1.
+
 \subsection{Three-fold Repetition}
 For simplicity, we will treat any repeated position as a draw.
 Our algorithm is straightforward: search the last N positions for the same hash, where N is the number of positions since the last pawn move.
 \subsection{50 Move Rule}
 \subsection{Exercises}
+\begin{enumerate}
+  \item Can you think of a faster way to check for repeated position?
+\end{enumerate}
+
 
 \newpage
 \part{Intermediate}
-\section{Smarter Quiescence Search}
-\subsection{Check Extensions}
 
-\section{Engine Reporting}
+You now have a decently strong engine.
+
+
+\section{Engine Reporting and Options}
+
+In this chapter we focus on completing our compliance of the UCI standard.
+
 \subsection{Mate-in-N}
-\subsection{Recovering Principal Variation}
-\subsection{Exercises}
 
-\section{Engine Options}
-\subsection{Hash Table Size}
+Here, we can kill two birds with one stone: 1) we can report out mate-in-N to the user, and 2) we can
+distinguish in our search between distance to mate.
+
+\subsection{Recovering Principal Variation}
+
+\subsection{Engine Options}
+
 \subsection{Exercises}
 \section{Move Ordering Heuristics}
+
+This is an extremely important chapter that could have easily been in the previous part. 
+Move ordering is key achieving a lot of cutoffs in alpha-beta pruning. However, the implementation and concepts needed to perform
+excellent move ordering are more in line with this section than the previous.
+
 \subsection{Static Exchange Evaluation}
 \subsection{Killer Move}
 \subsection{Exercises}
-\section{Fine Grained Optimization}
-\subsection{Magic Bitboards}
-\subsection{SIMD}
-\subsection{Exercises}
+
 \section{Tuned Evaluation}
+
+This is our first foray into the world of statistics and applied statistics (also known as machine learning).
+
 \section{Search Enhancements}
+
+This chapter like, move ordering, is also fundamental to chess programming. With these strategies, 
+we can begin to search to much higher depths like Stockfish does.
+
+\subsection{Check Extensions}
 \subsection{Null Move Pruning}
 \subsection{Principal Variation Search}
 \subsection{Aspiration Windows}
-\subsection{Extensions}
 \subsection{Reductions}
 \subsection{Exercises}
 
+\section{Fine Grained Optimization}
+
+This should hopefully be a fun chapter where we optimize our move generation to squeeze as much performance 
+as possible out of modern processors.
+
+\subsection{Magic Bitboards}
+\subsection{SIMD}
+\subsection{Exercises}
+
+\section{Time Management}
+
+This brief chapter deals with finding algorithms for time management based on different time control formats.
+
 \section{Parallel Search}
+
+In the final chapter capping off this section, we use take advantage of multi processor systems in order to 
+search even more nodes per second.
+
 \subsection{Lazy SMP}
 
 \newpage
@@ -191,21 +290,30 @@ I remember doing research in college where my task was to speed up an ancient C+
 
 One way of doing optimization is via hot-spot optimization. This basically means offloading running your program to another program that counts exactly how many times each function is called and how much time is spent in each function.
 
-Callgrind
+Here is a way to generate a call graph on Linux (must have vallgrind, gprof2dot, and dot):
+
+\begin{verbatim}
+valgrind --tool=callgrind ./path_to_executable
+gprof2dot -f callgrind callgrind.out.XXXXX | dot -Tsvg -o output.svg
+\end{verbatim}
 
 \subsection{Reading Assembly}
 
 It's possible to tell your compiler to output assembly, but there's an easier way.
 
-Compiler Explorer
+\href{https://godbolt.org/}{Compiler Explorer} is an online tool that outputs assembly and helps you read it.
+
+It's interesting to set an optimization level flag (e.g., -O3) and see what kind of optimizations the compiler can do 
+for you.
 
 
 \subsection{Profiling Cache Misses}
 
-However, simply reading the assembly might not be enough, because instruction count is dwarfed by the next optimization target.
+However, simply reading the assembly might not be enough, because instruction count is dwarfed by the cost of cache misses. 
 
-
-According to this stackoverflow post https://stackoverflow.com/a/29188516/19457287
+Basically, your CPU reads data from memory (RAM), but doing so is slow, so there are several caches in hardware
+that cache memory and allow it to be read faster. CPUs do math directly on registers, so those 
+are the fastest, but there are only a handful of registers per CPU.
 
 \begin{center}
 \begin{tabular}{ |c|c| }
@@ -222,7 +330,7 @@ DRAM     & 65 ns = 195 cycles on a 3 GHz CPU (5 x L3, 15 x L2, 60 x L1, 720 x re
 \hline
 \end{tabular}
 \end{center}
-
+Source: \url{https://stackoverflow.com/a/29188516/19457287}
 
 So cache misses are about half an order of magnitude at each level of miss. In other words, cache is the 
 daddy of optimization.
@@ -231,7 +339,17 @@ Cachegrind
 
 \subsection{Branch Predictor}
 
-Another place you will find weirdness (i.e., unexplainable performance gain/loss) is the branch predictor.
+Another place you will find weirdness (i.e., unexplainable performance gain/loss) is the branch predictor. I am not an 
+expert on CPU architecture, but here's my best explanation:
+
+CPUs save time by trying to guess the result of branch operations (in other words, if statements). 
+There is some magic algorithm built in the hardware, kind of like a Rock-Paper-Scissors AI, 
+which tries to figure out patterns in your branches, so that it guesses correctly more often.
+
+In other words, you want to organize the results of your if/else statements to be as 
+predictable as possible.
+
+See: \href{https://stackoverflow.com/questions/11227809/why-is-processing-a-sorted-array-faster-than-processing-an-unsorted-array}{StackOverflow post on branch prediction}
 
 \section{Lichess Deployment}
 

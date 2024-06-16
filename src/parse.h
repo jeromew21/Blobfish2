@@ -4,8 +4,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-//bool is_alphanum(const char c);
-
 bool is_whitespace(const char c);
 
 bool strings_equal(char *a, char *b);

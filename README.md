@@ -65,3 +65,7 @@ Scripts in `test/`
 
 Requirements: `blobfish`, `stockfish`, `cutechess-cli` commands available in $PATH
 
+## Documentation
+
+Engine design is documented in the book (WIP).
+
