@@ -206,6 +206,7 @@ void command_position(char *line_buffer) {
       board_make_move_from_alg(ctx->board, word);
     }
   }
+  printf("Static eval: %i", evaluation(ctx->board, ctx->board->_turn));
 }
 
 void command_uci(char *line_buffer) {

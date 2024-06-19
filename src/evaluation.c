@@ -27,8 +27,22 @@ i32 board_status(Board *board) {
     }
     return kStalemate;
   }
-  // TODO draw by 3fold and 50 move rule
-  // 3fold is far more important
+  //When board gets past this in tree, it forgets all threefold info. How to deal?
+  BoardMetadata *md = board_metadata_peek(board, 0);
+  const u64 hash = md->_hash;
+  if (md->_is_irreversible_move) {
+      return kPlayOn;
+  }
+  for (int i = (int)board->_ply; i >= 0; i-=2) {
+    BoardMetadata *comp_md = &board->_state_stack[i];
+    if (comp_md->_is_irreversible_move) return kPlayOn;
+    if (i >= 1 && board->_state_stack[i-1]._is_irreversible_move) return kPlayOn;
+    const u64 comp_hash = comp_md->_hash;
+    if (comp_hash == hash) {
+        return kDraw;
+    }
+  }
+  // TODO 50 move rule
   return kPlayOn;
 }
 
