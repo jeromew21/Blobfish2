@@ -33,7 +33,10 @@ void board_initialize_fen(Board *board, const char *fen) {
   memset(board, 0, sizeof(Board));
   i32 i = 0;
   fen_parse(board, fen, &i);
+  board->_fullmove_counter = 0;
   board->_initial_state._hash = board_position_hash(board);
+  board->_initial_state._is_irreversible_move = true;
+  board->_initial_state._halfmove_counter = 0;
 }
 
 void fen_parse(Board *board, const char *fen, i32 *i) {

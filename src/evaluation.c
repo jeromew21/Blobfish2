@@ -18,6 +18,20 @@ f64 evaluate_pawn_mobility(Board *board, i32 side);
 
 f64 evaluate_king_safety(Board *board, i32 side);
 
+i32 board_status(Board *board) {
+  int legal_count = board_legal_moves_count(board);
+  if (legal_count == 0) {
+    bool check = board_is_check(board);
+    if (check) {
+      return kCheckmate;
+    }
+    return kStalemate;
+  }
+  // TODO draw by 3fold and 50 move rule
+  // 3fold is far more important
+  return kPlayOn;
+}
+
 Centipawns evaluation(Board *board, i32 side) {
   i32 status = board_status(board);
   if (status == kCheckmate) {

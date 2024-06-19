@@ -2,6 +2,7 @@
 
 bool is_whitespace(const char c) { return c == ' ' || c == '\t'; }
 
+// TODO: change this to not have str- prefix
 bool strings_equal(char *a, char *b) { return strcmp(a, b) == 0; }
 
 void eat_whitespace(char *line_buffer, int *i) {

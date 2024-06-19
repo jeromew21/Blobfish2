@@ -239,6 +239,9 @@ void board_make_move(Board *board, Move mv) {
   BoardMetadata *prev_md = board_metadata_peek(board, 0);
   u64 *hash = &md->_hash;
   *hash = prev_md->_hash;
+  if (board->_turn == kBlack) {
+    board->_fullmove_counter += 1;
+  }
   hash_update_pieces(board->_bitboard, board->_turn, mv, hash);
   const u64 src = move_get_src(mv);
   const u64 dest = move_get_dest(mv);
@@ -249,6 +252,23 @@ void board_make_move(Board *board, Move mv) {
       const i32 col = (i32)prev_ep_square % 8;
       *hash ^= ZOBRIST_KEYS[ZOBRIST_EN_PASSANT + col];
     }
+  }
+  // Irreverisble moves. Maybe we optimize this by shoving these into other
+  // places where similar conditions are checked.
+  // or cache conditions as booleans to be reused.
+  if (src & board->_bitboard[kPawn]) {
+    md->_is_irreversible_move = true;
+    md->_halfmove_counter = 0;
+  } else if (move_metadata == kKingSideCastleMove ||
+             move_metadata == kQueenSideCastleMove) {
+    md->_is_irreversible_move = true;
+    md->_halfmove_counter = 0;
+  } else if (move_metadata & CAPTURE_BIT_FLAG) {
+    md->_is_irreversible_move = true;
+    md->_halfmove_counter = 0;
+  } else {
+    md->_is_irreversible_move = false;
+    md->_halfmove_counter += 1;
   }
   if (move_metadata == kDoublePawnMove) {
     u32 ep_square;
@@ -340,9 +360,12 @@ void board_make_move(Board *board, Move mv) {
 }
 
 void board_unmake(Board *board) {
-  // TODO: some more optional (?) checks for unmake
+  // TODO: some more optional (?) assertions for unmake
   assert(board->_ply > 0);
   BoardMetadata *md = board_metadata_peek(board, 0);
+  if (board->_turn == kBlack) {
+    board->_fullmove_counter -= 1;
+  }
   const Move mv = md->_last_move;
   const u64 src = move_get_src(mv);
   const u64 dest = move_get_dest(mv);

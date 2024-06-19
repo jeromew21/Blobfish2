@@ -1,9 +1,9 @@
 #pragma once
 
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdatomic.h>
 
 /* https://www.chessprogramming.org/Square_Mapping_Considerations#LittleEndianRankFileMapping
  */
@@ -18,7 +18,7 @@ typedef int32_t i32;
 
 typedef double f64;
 
-typedef _Atomic (bool) AtomicBool;
+typedef _Atomic(bool) AtomicBool;
 
 static const i32 PROMOTION_BIT_FLAG = 0x8;
 
@@ -40,21 +40,21 @@ static const i32 CAPTURE_BIT_FLAG = 0x4;
  * DO NOT TOUCH!!!
  */
 enum Piece {
-    kWhite = 0,
-    kBlack = 1,
-    kPawn = 2,
-    kBishop = 3,
-    kKnight = 4,
-    kRook = 5,
-    kQueen = 6,
-    kKing = 7,
+  kWhite = 0,
+  kBlack = 1,
+  kPawn = 2,
+  kBishop = 3,
+  kKnight = 4,
+  kRook = 5,
+  kQueen = 6,
+  kKing = 7,
 };
 
 enum BoardStatus {
-    kCheckmate,
-    kStalemate,
-    kDraw,
-    kPlayOn,
+  kCheckmate,
+  kStalemate,
+  kDraw,
+  kPlayOn,
 };
 
 /**
@@ -62,10 +62,10 @@ enum BoardStatus {
  * king and rook haven't moved yet). 1 in any slot means it's not allowed.
  */
 enum CastlingRights {
-    kWhiteKingSideFlag = 0x1,  // 0b0001,
-    kWhiteQueenSideFlag = 0x2, // 0b0010,
-    kBlackKingSideFlag = 0x4,  // 0b0100,
-    kBlackQueenSideFlag = 0x8, // 0b1000,
+  kWhiteKingSideFlag = 0x1,  // 0b0001,
+  kWhiteQueenSideFlag = 0x2, // 0b0010,
+  kBlackKingSideFlag = 0x4,  // 0b0100,
+  kBlackQueenSideFlag = 0x8, // 0b1000,
 };
 
 /**
@@ -73,9 +73,12 @@ enum CastlingRights {
  * Hashing is one thing that might benefit from being unmade.
  */
 typedef struct BoardMetadata {
-    u64 _hash;
-    Move _last_move; // 16 bits for now
-    uint16_t _state_data; // 16 bits for ep-square and castling rights
+  u64 _hash;
+  Move _last_move;            // 16 bits for now
+  uint16_t _state_data;       // 16 bits for ep-square and castling rights
+  bool _is_irreversible_move; // if it's move that resets the halfmove counter
+                              // (also threefold reps?)
+  u32 _halfmove_counter;
 } BoardMetadata;
 
 /**
@@ -84,12 +87,13 @@ typedef struct BoardMetadata {
  * https://www.chessprogramming.org/Bitboard_Board-Definition
  */
 typedef struct Board {
-    u64 _bitboard[8];
-    i32 _turn;
-    i32 _ply;
-    u64 _rook_start_positions;
-    BoardMetadata _initial_state;
-    BoardMetadata _state_stack[MAX_BOARD_STACK_DEPTH];
+  u64 _bitboard[8];
+  i32 _turn;
+  u32 _ply;
+  u64 _rook_start_positions;
+  u32 _fullmove_counter;
+  BoardMetadata _initial_state;
+  BoardMetadata _state_stack[MAX_BOARD_STACK_DEPTH];
 } Board;
 
 /**
@@ -100,20 +104,20 @@ typedef struct Board {
  * Note that 0b0100 masks for captures, and 0b1000 masks for promotions.
  */
 enum MoveMetadata {
-    kQuietMove = 0x0,
-    kDoublePawnMove = 0x1,             // 0b0001,
-    kKingSideCastleMove = 0x2,         // 0b0010,
-    kQueenSideCastleMove = 0x3,        // 0b0011,
-    kCaptureMove = 0x4,                // 0b0100,
-    kEnPassantMove = 0x5,              // 0b0101,
-    kKnightPromotionMove = 0x8,        // 0b1000,
-    kKnightCapturePromotionMove = 0xc, // 0b1100,
-    kBishopPromotionMove = 0x9,        // 0b1001,
-    kBishopCapturePromotionMove = 0xd, // 0b1101,
-    kRookPromotionMove = 0xa,          // 0b1010,
-    kRookCapturePromotionMove = 0xe,   // 0b1110,
-    kQueenPromotionMove = 0xb,         // 0b1011,
-    kQueenCapturePromotionMove = 0xf,  // 0b1111,
+  kQuietMove = 0x0,
+  kDoublePawnMove = 0x1,             // 0b0001,
+  kKingSideCastleMove = 0x2,         // 0b0010,
+  kQueenSideCastleMove = 0x3,        // 0b0011,
+  kCaptureMove = 0x4,                // 0b0100,
+  kEnPassantMove = 0x5,              // 0b0101,
+  kKnightPromotionMove = 0x8,        // 0b1000,
+  kKnightCapturePromotionMove = 0xc, // 0b1100,
+  kBishopPromotionMove = 0x9,        // 0b1001,
+  kBishopCapturePromotionMove = 0xd, // 0b1101,
+  kRookPromotionMove = 0xa,          // 0b1010,
+  kRookCapturePromotionMove = 0xe,   // 0b1110,
+  kQueenPromotionMove = 0xb,         // 0b1011,
+  kQueenCapturePromotionMove = 0xf,  // 0b1111,
 };
 
 /**
@@ -125,10 +129,10 @@ enum MoveMetadata {
  * as an upper bound.
  */
 typedef struct MoveList {
-    i32 count;
-    Move _stack_data[MOVELIST_STACK_COUNT];
-    // Move* _data;
-    // int _data_capacity;
+  i32 count;
+  Move _stack_data[MOVELIST_STACK_COUNT];
+  // Move* _data;
+  // int _data_capacity;
 } MoveList;
 
 /* Debug */
