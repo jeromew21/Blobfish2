@@ -29,6 +29,7 @@ if(MSVC)
 else()
   set(CMAKE_CXX_FLAGS_DEBUG "-g")
   set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+  target_link_libraries(${BLOBFISH_EXE} m)
   target_compile_options(${BLOBFISH_EXE} PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
