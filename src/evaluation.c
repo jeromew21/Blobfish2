@@ -35,13 +35,6 @@ i32 board_status(Board *board) {
 }
 
 Centipawns evaluation(Board *board, i32 side) {
-  i32 status = board_status(board);
-  if (status == kCheckmate) {
-    return side == kWhite ? MIN_EVAL : -MIN_EVAL;
-  }
-  if (status == kStalemate || status == kDraw) {
-    return 0;
-  }
 #define FEATURE_COUNT 5
   // Scale is centipawns
   // 1 pawn = 100 cp = +1
