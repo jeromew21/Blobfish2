@@ -12,6 +12,8 @@ f64 evaluate_material(Board *board, i32 side);
 
 f64 evaluate_bishop_mobility(Board *board, i32 side);
 
+f64 evaluate_rook_mobility(Board *board, i32 side);
+
 f64 evaluate_knight_mobility(Board *board, i32 side);
 
 f64 evaluate_pawn_mobility(Board *board, i32 side);
@@ -34,19 +36,21 @@ i32 board_status(Board *board) {
   return kPlayOn;
 }
 
+// Note: we've changed it so that eval no longer takes into account terminal
+// board states. It should just evaluate checkmate as bad.
 Centipawns evaluation(Board *board, i32 side) {
-#define FEATURE_COUNT 5
+#define FEATURE_COUNT 6
   // Scale is centipawns
   // 1 pawn = 100 cp = +1
   // 1/10 of pawn = 10 cp = +0.1
   // 1/100 of pawn = 1 cp = +0.01
   static const evaluate_function eval_functions[FEATURE_COUNT] = {
       evaluate_material,        evaluate_bishop_mobility,
-      evaluate_knight_mobility, evaluate_pawn_mobility,
-      evaluate_king_safety,
+      evaluate_knight_mobility, evaluate_rook_mobility,
+      evaluate_pawn_mobility,   evaluate_king_safety,
   };
   static const f64 weights[FEATURE_COUNT] = {
-      1.0, 20.0, 20.0, 20.0, 1.0,
+      1.0, 20.0, 20.0, 20.0, 0.0, 0.0,
   }; // These might actually want to change based
      // on game state but keep static const for now.
   f64 features[FEATURE_COUNT];
@@ -79,6 +83,24 @@ f64 evaluate_bishop_mobility(Board *board, i32 side) {
   if (bishop_count == 0)
     return 0;
   return mobility / (f64)bishop_count;
+}
+
+f64 evaluate_rook_mobility(Board *board, i32 side) {
+  const u64 *bb = board->_bitboard;
+  const u64 occupancy_mask = bb[kWhite] | bb[kBlack];
+  f64 mobility = 0;
+  u64 rooks = bb[kRook] & bb[side];
+  i32 rook_count = pop_count(rooks);
+  while (rooks) {
+    u32 rook_idx = bitscan_forward(rooks);
+    // For sliding pieces, we can add times they attack own pieces (i.e.)
+    // protect.
+    mobility += pop_count(rook_moves(rook_idx, occupancy_mask));
+    rooks ^= (u64)1 << rook_idx;
+  }
+  if (rook_count == 0)
+    return 0;
+  return mobility / (f64)rook_count;
 }
 
 f64 evaluate_knight_mobility(Board *board, i32 side) {

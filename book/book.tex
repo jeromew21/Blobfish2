@@ -169,6 +169,52 @@ exposure to the eternal problem with depth-limited game tree search: the dreaded
 
 \subsection{Exercises}
 
+\section{Move Ordering}
+Move ordering is critical to search performance.
+
+This is going to be a short chapter, 
+but note this is a cross-cutting concept that overlaps a lot with other chapters.
+Many chapters ahead may touch our move ordering code. It's not an independent topic.
+In a later chapter we will deep-dive on move ordering. Here we more or less only 
+implement the skeleton.
+
+\subsection{Move Scoring}
+Our first try at scoring moves will be such: first, we try the best move from previous iterative 
+deepening iteration, then we try promotions, then captures. This is an extremely simiplistic way of doing 
+things.
+
+\subsubsection*{To sort or not to sort}
+
+Once we have our moves scored, it's important to ask how we're going to pop our
+our highest scored move from the list. We could go ahead and sort ahead of time;
+but remember, in alpha-beta search we're expecting a cut-off very early on in most nodes.
+
+This means that sorting the entire move list ahead of time might be less efficient than 
+doing a full-list scan. And looking ahead, we might generate moves in stages: i.e.,
+first generate checks, then captures, then special moves, then non-captures. Here, a whole-list 
+sort doesn't make a ton of sense.
+
+The CS major in you might say use a priority queue. It's possible that this is a good
+solution as well.
+
+\subsubsection*{Looking ahead}
+
+In the later move ordering chapter we will both add more criteria for our base move ordering, 
+introduce some algorithms for scoring moves, and introduce some interesting heuristics for 
+ordering moves.
+
+\subsection{Exercises}
+
+\subsubsection{}
+
+How could we order captures better? Come up with an efficient algorithm for this.
+
+\subsubsection{}
+
+There is a chess adage, ``You must calculate checks, captures, and attacks``. 
+Why or why not might this be good advice for a chess engine programmer? If it is, how would 
+we efficiently implement it in our engine?
+
 \section{Transposition Tables}
 
 At this point, I ran 1000 games of the engine versus Stockfish set to an ELO limited to 1320. The results concluded that the engine's ELO is ~1200.
@@ -214,13 +260,9 @@ irreversible move.
 We implement it in a pretty slow manner
 \subsection{50 Move Rule}
 \subsection{Exercises}
-\begin{enumerate}
-  \item Can you think of a faster way to check for repeated position?
-\end{enumerate}
 
-
-
-You now have a decently strong engine.
+\subsubsection{}
+Can you think of a faster way to check for repeated position?
 
 
 \section{Engine Reporting and Options}
@@ -232,12 +274,19 @@ In this chapter we complete our compliance of the UCI standard.
 Here, we can kill two birds with one stone: 1) we can report out mate-in-N to the user, and 2) we can
 distinguish in our search between distance to mate.
 
+At a leaf node which is mate, we want to output a mating score, which should be higher
+the closer the mate is.
+
 \subsection{Recovering Principal Variation}
 
 \subsection{Engine Options}
 
 \subsection{Exercises}
-\section{Move Ordering Heuristics}
+
+\newpage
+\part{Engine Optimization}
+
+\section{Advanced Move Ordering Heuristics}
 
 This is an extremely important chapter.
 Move ordering is key achieving a lot of cutoffs in alpha-beta pruning. 
@@ -248,8 +297,6 @@ excellent move ordering are more in line with this section than the previous.
 \subsection{Killer Move}
 \subsection{Exercises}
 
-\newpage
-\part{Engine Optimization}
 
 \section{Tuned Evaluation}
 
@@ -295,8 +342,6 @@ search even more nodes per second.
 \part{Advanced Engine Concepts}
 
 \section{Neural Network Evaluation}
-
-\section{GPU Move Generation}
 
 \section{AlphaZero and Monte-Carlo Tree Search}
 

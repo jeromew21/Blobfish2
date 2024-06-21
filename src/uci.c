@@ -260,6 +260,7 @@ void engine_initialize(void) {
   ctx->debug = false;
   ctx->quit = false;
   ctx->log_fp = fopen("log.txt", "a");
+  init_tables();
   fprintf(ctx->log_fp, "INFO: started new %s instance\n", ENGINE_NAME);
 }
 
@@ -267,6 +268,7 @@ void engine_cleanup(void) {
   free(ctx->board);
   fclose(ctx->log_fp);
   free(ctx);
+  destroy_tables();
 }
 
 /**

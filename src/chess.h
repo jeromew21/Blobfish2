@@ -10,9 +10,12 @@
 typedef uint64_t u64;
 
 /* https://www.chessprogramming.org/Encoding_Moves */
-typedef uint16_t Move; // could using 32 bits instead be more optimized?
+typedef uint16_t Move; // could using 32 bits instead be more optimized? also
+                       // allows us to store piece type
 
 typedef uint32_t u32;
+
+typedef uint8_t u8;
 
 typedef int32_t i32;
 
