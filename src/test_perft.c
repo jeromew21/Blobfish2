@@ -69,7 +69,7 @@ bool perft_test_line(char *line, int max_depth) {
   }
   int depth, count;
   Board *board = calloc(1, sizeof(Board));
-  board_initialize_fen(board, line);
+  board_initialize_fen(board, line, NULL);
   int cases = 0;
   int passes = 0;
   while (1) {

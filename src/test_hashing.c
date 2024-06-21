@@ -30,7 +30,11 @@ void hashing_test() {
   map.count = hashmap_count;
   map.elements = calloc(1, hashmap_size_bytes);
   Board *board = calloc(1, sizeof(Board));
-  board_initialize_startpos(board);
+  // board_initialize_startpos(board);
+  board_initialize_fen(
+      board,
+      "r2qk1nr/pBp2ppp/3p1b2/4p3/4P3/2NP1Q1P/RPP2PP1/2B1K2R b Kkq - 0 10",
+      NULL);
   simple_perft(board, 5, &map);
   // We've confirmed correct for perft(startpos, 5).
   // TODO: try testing with more dynamic position.
@@ -71,10 +75,6 @@ void simple_perft(Board *board, int depth, TestHashMap *map) {
         board_dump(&elem->board);
         getchar();
       }
-    } else {
-      elem->board = *board;
-      elem->hash = board_hash;
-      elem->occupied = true;
     }
   }
   if (depth == 0)

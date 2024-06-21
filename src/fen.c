@@ -15,12 +15,14 @@ void parse_halfmove_clock(Board *board, const char *fen, i32 *i);
 
 void parse_fullmove_counter(Board *board, const char *fen, i32 *i);
 
+void fen_parse(Board *board, const char *fen, i32 *i);
+
 /**
  * Create board with basic start position.
  */
 void board_initialize_startpos(Board *board) {
   board_initialize_fen(
-      board, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+      board, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", NULL);
 }
 
 /**
@@ -29,14 +31,22 @@ void board_initialize_startpos(Board *board) {
  * TODO: catch parse errors
  * TODO: the other direction, board->fen
  */
-void board_initialize_fen(Board *board, const char *fen) {
+void board_initialize_fen(Board *board, const char *fen, i32 *i) {
   memset(board, 0, sizeof(Board));
-  i32 i = 0;
-  fen_parse(board, fen, &i);
   board->_fullmove_counter = 0;
-  board->_initial_state._hash = board_position_hash(board);
-  board->_initial_state._is_irreversible_move = true;
-  board->_initial_state._halfmove_counter = 0;
+  board->_state_stack[0]._is_irreversible_move = false;
+  board->_state_stack[0]._halfmove_counter = 0;
+  board->_state_stack[0]._is_repetition = false;
+  board->_state_stack[0]._last_move = 0;
+  board->_state_stack[0]._state_data = 0;
+  board->_ply = 1;
+  if (i == NULL) {
+    int k = 0;
+    fen_parse(board, fen, &k);
+  } else {
+    fen_parse(board, fen, i);
+  }
+  board->_state_stack[0]._hash = board_position_hash(board);
 }
 
 void fen_parse(Board *board, const char *fen, i32 *i) {

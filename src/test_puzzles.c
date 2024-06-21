@@ -66,7 +66,7 @@ bool puzzle_test_line(const char *line, Board *board) {
   printf("%s\n", cells[FEN]);
   printf("%s\n", cells[Moves]);
    */
-  board_initialize_fen(board, cells[FEN]);
+  board_initialize_fen(board, cells[FEN], NULL);
   char second_move_buf[16];
   {
     int move_parse_head = 0;

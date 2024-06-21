@@ -196,7 +196,7 @@ void command_position(char *line_buffer) {
   char word[16];
   eat_word(line_buffer, word, &i);
   if (strings_equal("fen", word)) {
-    fen_parse(ctx->board, line_buffer, &i);
+    board_initialize_fen(ctx->board, line_buffer, &i);
   } else {
     board_initialize_startpos(ctx->board);
   }
@@ -206,7 +206,6 @@ void command_position(char *line_buffer) {
       board_make_move_from_alg(ctx->board, word);
     }
   }
-  printf("Static eval: %i", evaluation(ctx->board, ctx->board->_turn));
 }
 
 void command_uci(char *line_buffer) {

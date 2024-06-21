@@ -82,7 +82,7 @@ Kind of like a build-system-build-system. This isn't too important; if you prefe
 using Visual Studio natively everything should work fine. 
 My preferred setup for writing C is CLion+Linux, though macOS works fine as well. 
 
-\part{Beginner}
+\part{Modeling Chess}
 
 At the end of this part, you will have a working chess engine that sits around 1800-2000 ELO. 
 
@@ -122,6 +122,8 @@ Let's test and benchmark our move generation.
 \subsection{Perft}
 \subsection{Benchmarking}
 \subsection{Exercises}
+
+\part{A Minimal Engine}
 
 \section{Static Evaluation}
 
@@ -194,8 +196,22 @@ It's easy to write bugs related to hashing so let's figure out a way to test our
 We are now on the final chapter of Part 1.
 
 \subsection{Three-fold Repetition}
-For simplicity, we will treat any repeated position as a draw.
-Our algorithm is straightforward: search the last N positions for the same hash, where N is the number of positions since the last pawn move.
+
+The three-fold rule has some noteriety in the chess world for its difficulty to enforce. This has 
+to do with the slight nuances in rule statement between different chess federations.
+Basically, the confusion boils down to whether castling counts as an irreversible move or not.
+
+A new piece of terminology shared between both repetition and 50 move draws: an irreversible move is one that must lead to a new position, and functionally,
+our halfmove clock is incremented after every non-irreversible move. The irreversible moves are 
+captures, pawn moves (because pawns can't move backwards), and castling.
+
+For simplicity, we will treat any repeated position as a draw. There might be some advantage 
+to having the option to repeat once, maybe to gain time on the clock.
+
+Our algorithm is straightforward: search the last N positions for the same hash, where N is the number of positions since the last
+irreversible move.
+
+We implement it in a pretty slow manner
 \subsection{50 Move Rule}
 \subsection{Exercises}
 \begin{enumerate}
@@ -203,15 +219,13 @@ Our algorithm is straightforward: search the last N positions for the same hash,
 \end{enumerate}
 
 
-\newpage
-\part{Intermediate}
 
 You now have a decently strong engine.
 
 
 \section{Engine Reporting and Options}
 
-In this chapter we focus on completing our compliance of the UCI standard.
+In this chapter we complete our compliance of the UCI standard.
 
 \subsection{Mate-in-N}
 
@@ -225,13 +239,17 @@ distinguish in our search between distance to mate.
 \subsection{Exercises}
 \section{Move Ordering Heuristics}
 
-This is an extremely important chapter that could have easily been in the previous part. 
-Move ordering is key achieving a lot of cutoffs in alpha-beta pruning. However, the implementation and concepts needed to perform
+This is an extremely important chapter.
+Move ordering is key achieving a lot of cutoffs in alpha-beta pruning. 
+However, the implementation and concepts needed to perform
 excellent move ordering are more in line with this section than the previous.
 
 \subsection{Static Exchange Evaluation}
 \subsection{Killer Move}
 \subsection{Exercises}
+
+\newpage
+\part{Engine Optimization}
 
 \section{Tuned Evaluation}
 
@@ -249,7 +267,7 @@ we can begin to search to much higher depths like Stockfish does.
 \subsection{Reductions}
 \subsection{Exercises}
 
-\section{Fine Grained Optimization}
+\section{Micro Optimization}
 
 This should hopefully be a fun chapter where we optimize our move generation to squeeze as much performance 
 as possible out of modern processors.
@@ -262,6 +280,10 @@ as possible out of modern processors.
 
 This brief chapter deals with finding algorithms for time management based on different time control formats.
 
+\subsection{Pondering}
+
+Pondering is simply ``thinking on the opponent's turn``.
+
 \section{Parallel Search}
 
 In the final chapter capping off this section, we use take advantage of multi processor systems in order to 
@@ -270,7 +292,7 @@ search even more nodes per second.
 \subsection{Lazy SMP}
 
 \newpage
-\part{Advanced}
+\part{Advanced Engine Concepts}
 
 \section{Neural Network Evaluation}
 

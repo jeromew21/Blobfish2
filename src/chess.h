@@ -74,11 +74,12 @@ enum CastlingRights {
  */
 typedef struct BoardMetadata {
   u64 _hash;
-  Move _last_move;            // 16 bits for now
-  uint16_t _state_data;       // 16 bits for ep-square and castling rights
+  Move _last_move;      // 16 bits for now
+  uint16_t _state_data; // 16 bits for ep-square and castling rights
+  u32 _halfmove_counter;
+  bool _is_repetition;
   bool _is_irreversible_move; // if it's move that resets the halfmove counter
                               // (also threefold reps?)
-  u32 _halfmove_counter;
 } BoardMetadata;
 
 /**
@@ -90,9 +91,8 @@ typedef struct Board {
   u64 _bitboard[8];
   i32 _turn;
   u32 _ply;
-  u64 _rook_start_positions;
+  u64 _rook_start_positions; // TODO what if no rooks at root position?
   u32 _fullmove_counter;
-  BoardMetadata _initial_state;
   BoardMetadata _state_stack[MAX_BOARD_STACK_DEPTH];
 } Board;
 
@@ -205,11 +205,11 @@ u32 board_metadata_get_castling_rights(BoardMetadata *md);
 
 /* Board construction */
 
-void board_initialize_fen(Board *board, const char *fen);
+void board_initialize_fen(Board *board, const char *fen, i32 *i);
 
 void board_initialize_startpos(Board *board);
 
-void fen_parse(Board *board, const char *fen, i32 *i);
+// void fen_parse(Board *board, const char *fen, i32 *i);
 
 /* Board state */
 

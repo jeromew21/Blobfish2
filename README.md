@@ -46,6 +46,8 @@ Engine command: `test perft`
 
 This may take a few minutes.
 
+Issues with 960 and castling correctness (i.e. handicap positions) are TODO.
+
 ### Puzzles
 
 Engine command: `test puzzles`
