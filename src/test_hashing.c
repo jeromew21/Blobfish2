@@ -31,9 +31,14 @@ void hashing_test() {
   map.elements = calloc(1, hashmap_size_bytes);
   Board *board = calloc(1, sizeof(Board));
   // board_initialize_startpos(board);
+  // startpos
+  //"r2qk1nr/pBp2ppp/3p1b2/4p3/4P3/2NP1Q1P/RPP2PP1/2B1K2R b Kkq - 0 10",
+  //// castle
+  //"r1bqkbnr/p1p1p1pp/np6/3pPp2/3P4/5N2/PPP2PPP/RNBQKB1R w KQkq f6 0 5",
+  ////EP
   board_initialize_fen(
       board,
-      "r2qk1nr/pBp2ppp/3p1b2/4p3/4P3/2NP1Q1P/RPP2PP1/2B1K2R b Kkq - 0 10",
+      "r1bqkbnr/p1p1p1pp/np6/3pPp2/3P4/5N2/PPP2PPP/RNBQKB1R w KQkq f6 0 5",
       NULL);
   simple_perft(board, 5, &map);
   // We've confirmed correct for perft(startpos, 5).

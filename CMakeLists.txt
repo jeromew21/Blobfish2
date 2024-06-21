@@ -8,6 +8,7 @@ set(BLOBFISH_EXE blobfish)
 set(BLOBFISH_SRC_FILES src/bit_twiddling.c
         src/fen.c
         src/debug.c
+        src/board.c
         src/evaluation.c
         src/move.c
         src/move_generation.c

@@ -2,9 +2,17 @@
 #include "chess.h"
 #include <float.h>
 
-Centipawns search_recursive(Board *board, Centipawns alpha, Centipawns beta,
-                            i32 depth, AtomicBool *stop, Move *best_move,
-                            u64 *nodes_searched);
+typedef struct SearchArguments {
+  Board *board;
+  Centipawns alpha;
+  Centipawns beta;
+  i32 ply_depth;
+  AtomicBool *stop;
+  Move *pv_move;
+  u64 *nodes_searched;
+} SearchArguments;
+
+Centipawns search_recursive(SearchArguments args);
 
 Centipawns qsearch(Board *board, Centipawns alpha, Centipawns beta,
                    AtomicBool *stop, u64 *nodes_searched);
@@ -36,9 +44,15 @@ void search(Board *board, Move *best_move, AtomicBool *stop_thinking,
                 // score, not sure
       Move mv = move_list_get(&moves, i);
       board_make_move(board, mv);
-      Centipawns score =
-          -search_recursive(board, -beta, -alpha, ply_depth, stop_thinking,
-                            &pv_move, &nodes_searched);
+      SearchArguments sub_args;
+      sub_args.board = board;
+      sub_args.alpha = -beta;
+      sub_args.beta = -alpha;
+      sub_args.ply_depth = ply_depth;
+      sub_args.stop = stop_thinking;
+      sub_args.pv_move = &pv_move;
+      sub_args.nodes_searched = &nodes_searched;
+      Centipawns score = -search_recursive(sub_args);
       if (score > best_score_found) {
         best_score_found = score;
         best_move_found = mv;
@@ -99,37 +113,44 @@ Centipawns qsearch(Board *board, Centipawns alpha, Centipawns beta,
   return alpha;
 }
 
-Centipawns search_recursive(Board *board, Centipawns alpha, Centipawns beta,
-                            i32 ply_depth, AtomicBool *stop, Move *pv_move,
-                            u64 *nodes_searched) {
-  if (ply_depth == 0) {
-    return qsearch(board, alpha, beta, stop, nodes_searched);
+Centipawns search_recursive(SearchArguments args) {
+  // transposition table probe
+  if (args.ply_depth == 0) {
+    return qsearch(args.board, args.alpha, args.beta, args.stop,
+                   args.nodes_searched);
   }
-  (*nodes_searched)++;
-  MoveList moves = generate_all_legal_moves(board);
+  (*args.nodes_searched)++;
+  MoveList moves = generate_all_legal_moves(args.board);
   Move best_move_found = move_list_get(&moves, 0);
   for (int i = 0; i < moves.count; i++) {
-    if (*stop) {
+    if (*args.stop) {
       // we don't care about the result here
       break;
     }
     Move mv = move_list_get(&moves, i);
-    board_make_move(board, mv);
-    Centipawns score = -search_recursive(board, -beta, -alpha, ply_depth - 1,
-                                         stop, pv_move, nodes_searched);
-    board_unmake(board);
-    if (score >= beta) {
-      (*pv_move) = best_move_found; // do we need? we're not in a PV-node
+    board_make_move(args.board, mv);
+    SearchArguments sub_args;
+    sub_args.board = args.board;
+    sub_args.alpha = -args.beta;
+    sub_args.beta = -args.alpha;
+    sub_args.ply_depth = args.ply_depth - 1;
+    sub_args.stop = args.stop;
+    sub_args.pv_move = args.pv_move;
+    sub_args.nodes_searched = args.nodes_searched;
+    Centipawns score = -search_recursive(sub_args);
+    board_unmake(args.board);
+    if (score >= args.beta) {
+      (*args.pv_move) = best_move_found; // do we need? we're not in a PV-node
       // this is a Cut-node
       // we return a lower bound; the exact score might be higher
-      return beta;
+      return args.beta;
     }
-    if (score > alpha) {
-      alpha = score;
+    if (score > args.alpha) {
+      args.alpha = score;
       best_move_found = mv;
     }
   }
   // what if no move raised alpha? then do we store?
-  (*pv_move) = best_move_found;
-  return alpha;
+  (*args.pv_move) = best_move_found;
+  return args.alpha;
 }

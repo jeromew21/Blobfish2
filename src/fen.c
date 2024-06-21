@@ -18,14 +18,6 @@ void parse_fullmove_counter(Board *board, const char *fen, i32 *i);
 void fen_parse(Board *board, const char *fen, i32 *i);
 
 /**
- * Create board with basic start position.
- */
-void board_initialize_startpos(Board *board) {
-  board_initialize_fen(
-      board, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", NULL);
-}
-
-/**
  * https://www.chessprogramming.org/Forsyth-Edwards_Notation
  * TODO: upgrade to Shredder-FEN for 960 support
  * TODO: catch parse errors
