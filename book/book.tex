@@ -8,6 +8,32 @@
 \usepackage{graphicx} % Required for inserting images
 \usepackage[T1]{fontenc}
 \usepackage{palatino}
+\usepackage{courier}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle}
 
 \title{Building a Chess Engine}
 \author{Jerome Wei}
@@ -82,6 +108,7 @@ Kind of like a build-system-build-system. This isn't too important; if you prefe
 using Visual Studio natively everything should work fine. 
 My preferred setup for writing C is CLion+Linux, though macOS works fine as well. 
 
+\newpage
 \part{Modeling Chess}
 
 At the end of this part, you will have a working chess engine that sits around 1800-2000 ELO. 
@@ -127,16 +154,46 @@ Let's test and benchmark our move generation.
 
 \section{Static Evaluation}
 
-Now, we want to score a position based on how good it is. We won't do any tree searching yet.
+Human chess players have to end their calculations somewhere. Usually they do in a position 
+that they can evaluate, that is, assess without calculating any more moves.
+
+This is kind of a strange activity since no tactics or moves are assessed; you're only 
+evaluating the features of a position such as the material. This might jump out at you as 
+slightly stupid; if it does, peek forward to the chapter about Quiescence search.
+
+The commonly accepted wisdom was that human chess players are
+much better than computers at evaluating positions;
+this changed around the mid 2010s as neural network evaluations started to become 
+efficiently incorporable into engines. 
 
 \subsection{Material}
+
+Material is a clear evaluation feature.
+\begin{lstlisting}[language=C]
+f64 evaluate_material(Board *board, i32 color) {
+  static const f64 material_table[8] = {0,     0,     100.0, 301.0,
+                                        299.0, 500.0, 900.0, 0};
+  f64 material = 0;
+  for (int i = 2; i < 8; i++) {
+    i32 count = pop_count(board->_bitboard[color] & board->_bitboard[i]);
+    material += material_table[i] * count;
+  }
+  return material;
+}
+\end{lstlisting}
 \subsection{King Safety}
+
+
+
 \subsection{Pieces}
 \subsection{Exercises}
 
 \section{Search}
 
-In this chapter we will begin implementing our game tree search.
+In this chapter we will begin implementing our game tree search. There is a tension between
+search and evaluation: generally, the stronger the evaluation, the slower it is,
+and the search will see fewer positions. A weaker, faster evaluation sees more positions.
+Of course, this is a rule of thumb; you want a fast and strong evaluation function. 
 
 \subsection{Minimax}
 \subsection{Alpha-Beta}
@@ -161,6 +218,7 @@ how good at chess are we?
 \subsection{Exercises}
 
 \section{Quiescence Search}
+
 
 If you've been playing or watching the engine play so far, you might notice it blunders a lot. This is our first 
 exposure to the eternal problem with depth-limited game tree search: the dreaded horizon effect.

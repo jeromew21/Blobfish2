@@ -8,7 +8,7 @@
 
 typedef int32_t Centipawns;
 
-static const Centipawns MIN_EVAL = -100000;
+static const Centipawns MIN_EVAL = -1000000;
 
 enum NodeType {
   kPV,
@@ -17,16 +17,18 @@ enum NodeType {
 };
 
 typedef struct TTableBucket {
-  u64 hash;
+  u64 hash; // 0 if not present
   u8 depth;
   u8 node_type;
   Move best_move;
+  Centipawns score;
 } TTableBucket;
 
 typedef struct TranspositionTable {
   TTableBucket *buckets;
   u64 count;
   u64 mask;
+  u64 filled;
 } TranspositionTable;
 
 typedef struct PVTableBucket {
@@ -43,7 +45,7 @@ typedef struct PVTable {
 
 /* Evaluation */
 
-Centipawns evaluation(Board *board, i32 side);
+Centipawns evaluation(Board *board);
 
 /* Search */
 

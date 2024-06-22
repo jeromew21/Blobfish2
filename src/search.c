@@ -11,13 +11,9 @@ void init_tables();
 
 void destroy_tables();
 
-TTableBucket *ttable_probe(); // TODO
+TTableBucket *ttable_probe(u64 hash); // TODO
 
-void ttable_insert(); // TODO
-
-PVTableBucket *pv_table_probe(); // TODO
-
-void pv_table_insert(); // TODO
+PVTableBucket *pv_table_probe();
 
 typedef struct SearchArguments {
   Board *board;
@@ -25,7 +21,6 @@ typedef struct SearchArguments {
   Centipawns beta;
   i32 ply_depth;
   AtomicBool *stop;
-  Move *pv_move;
   u64 *nodes_searched;
 } SearchArguments;
 
@@ -49,6 +44,10 @@ Move pop_max(ScoredMoveList *scored_moves);
 
 Move peep_max(ScoredMoveList *scored_moves);
 
+Centipawns min(Centipawns x, Centipawns y) { return x < y ? x : y; }
+
+Centipawns max(Centipawns x, Centipawns y) { return x > y ? x : y; }
+
 /**
  * Root search
  */
@@ -68,7 +67,6 @@ void search(Board *board, Move *best_move, AtomicBool *stop_thinking,
     if (*stop_thinking)
       return;
     Move best_move_found = move_list_get(&moves, 0);
-    Move pv_move;
     Centipawns best_score_found = MIN_EVAL;
     Centipawns alpha = MIN_EVAL;
     Centipawns beta = -MIN_EVAL;
@@ -85,7 +83,6 @@ void search(Board *board, Move *best_move, AtomicBool *stop_thinking,
       sub_args.beta = -alpha;
       sub_args.ply_depth = ply_depth;
       sub_args.stop = stop_thinking;
-      sub_args.pv_move = &pv_move;
       sub_args.nodes_searched = &nodes_searched;
       Centipawns score = -search_recursive(sub_args);
       if (score > best_score_found) {
@@ -102,15 +99,15 @@ void search(Board *board, Move *best_move, AtomicBool *stop_thinking,
       // check for mate
       char score_string[64];
       bool mate = false;
-      if (abs(MIN_EVAL) - abs(best_score_found) < 100) {
-        // mate in n
-        // now plies = distance from board 0th ply to leaf.depth
+      if (abs(MIN_EVAL) - abs(best_score_found) < 1024) {
+        // 1024 leaves room for, say, mate in 30, with a large game of around
+        // 400+ plies. mate in n now plies = distance from board 0th ply to
+        // leaf.depth
         if (best_score_found > 0) {
           int plies = -MIN_EVAL - best_score_found;
           int moves_to_mate = ceil(((double)(plies - board->_ply)) / 2.0);
           sprintf(score_string, "mate %i", moves_to_mate);
         } else {
-          printf("info best score found = %i\n", best_score_found);
           int plies = best_score_found - MIN_EVAL;
           int moves_to_mate = ceil(((double)(plies - board->_ply)) / 2.0);
           sprintf(score_string, "mate -%i", moves_to_mate);
@@ -131,9 +128,11 @@ void search(Board *board, Move *best_move, AtomicBool *stop_thinking,
       }
       double npms = (double)nodes_searched / (double)execution_time_ms;
       double nps = npms * 1000;
-      fprintf(outfile, "info depth %i score %s nodes %llu nps %i time %i\n",
+      double hashfull = 1000000.0 * (double)tt.filled / (double)tt.count;
+      fprintf(outfile,
+              "info depth %i score %s nodes %llu nps %i hashfull %i time %i\n",
               ply_depth + 1, score_string, (unsigned long long)nodes_searched,
-              (int)nps, (int)execution_time_ms);
+              (int)nps, (int)hashfull, (int)execution_time_ms);
       if (mate) {
         // Stockfish does keep outputting higher depths when mate found but not
         // sure if this is due to parallel search or something
@@ -149,7 +148,7 @@ void search(Board *board, Move *best_move, AtomicBool *stop_thinking,
  */
 Centipawns qsearch(Board *board, Centipawns alpha, Centipawns beta,
                    AtomicBool *stop) {
-  int stand_pat = evaluation(board, board->_turn);
+  int stand_pat = evaluation(board);
   if (stand_pat >= beta) {
     return beta;
   }
@@ -181,17 +180,47 @@ Centipawns qsearch(Board *board, Centipawns alpha, Centipawns beta,
  */
 Centipawns search_recursive(SearchArguments args) {
   (*args.nodes_searched)++;
-  // transposition table probe
+  Move tt_move = 0;
+  u64 hash = board_metadata_peek(args.board, 0)->_hash;
+  TTableBucket *bucket = ttable_probe(hash);
+  if (bucket->hash == hash) {
+    tt_move = bucket->best_move;
+    if (bucket->depth >= args.ply_depth) {
+      switch (bucket->node_type) {
+      case kCut:
+        args.alpha = max(args.alpha, bucket->score);
+        break;
+      case kAll:
+        args.beta = min(args.beta, bucket->score);
+        break;
+      case kPV: {
+        return bucket->score;
+      }
+      }
+      if (args.alpha >= args.beta) {
+        return args.beta;
+      }
+      return bucket->score; // i think we want to return here no matter what
+    }
+  }
   i32 status = board_status(args.board);
   if (status == kCheckmate) {
-    return MIN_EVAL + (i32)args.board->_ply;
+    Centipawns mating_score = MIN_EVAL + (i32)args.board->_ply;
+    return mating_score;
   }
   if (status == kStalemate || status == kDraw) {
-    return 0;
+    return 0; // TODO: contempt factor
   }
   if (args.ply_depth == 0) {
     return qsearch(args.board, args.alpha, args.beta, args.stop);
   }
+  // IDK WHY WE START INSERTING AFTER HERE???
+  // surely we want to store leaf results??
+  if (bucket->hash == 0) {
+    tt.filled += 1;
+  }
+  bucket->hash = hash;
+  bucket->depth = args.ply_depth;
   MoveList legal_moves = generate_all_legal_moves(args.board);
   ScoredMoveList moves_scored;
   moves_scored.count = 0;
@@ -199,6 +228,9 @@ Centipawns search_recursive(SearchArguments args) {
     Move mv = move_list_get(&legal_moves, i);
     u32 mv_md = move_get_metadata(mv);
     i32 score = 0;
+    if (mv == tt_move) {
+      score += 1000;
+    }
     if (mv_md & PROMOTION_BIT_FLAG) {
       score += 100;
     }
@@ -210,7 +242,8 @@ Centipawns search_recursive(SearchArguments args) {
     moves_scored.items[moves_scored.count].valid = true;
     moves_scored.count++;
   }
-  Move best_move_found = peep_max(&moves_scored);
+  bucket->best_move = peep_max(&moves_scored);
+  bucket->node_type = kAll;
   for (int i = 0; i < legal_moves.count; i++) {
     if (*args.stop) {
       // we don't care about the result here
@@ -224,23 +257,24 @@ Centipawns search_recursive(SearchArguments args) {
     sub_args.beta = -args.alpha;
     sub_args.ply_depth = args.ply_depth - 1;
     sub_args.stop = args.stop;
-    sub_args.pv_move = args.pv_move;
     sub_args.nodes_searched = args.nodes_searched;
     Centipawns score = -search_recursive(sub_args);
     board_unmake(args.board);
     if (score >= args.beta) {
-      (*args.pv_move) = best_move_found; // do we need? we're not in a PV-node
       // this is a Cut-node
       // we return a lower bound; the exact score might be higher
+      bucket->node_type = kCut;
+      bucket->best_move = mv;
+      bucket->score = args.beta;
       return args.beta;
     }
     if (score > args.alpha) {
+      bucket->node_type = kPV;
+      bucket->best_move = mv;
       args.alpha = score;
-      best_move_found = mv;
     }
   }
-  // what if no move raised alpha? then do we store?
-  (*args.pv_move) = best_move_found;
+  bucket->score = args.alpha;
   return args.alpha;
 }
 
@@ -279,7 +313,12 @@ Move peep_max(ScoredMoveList *scored_moves) {
   return best.mv;
 }
 
-// TODO: add some parameters
+TTableBucket *ttable_probe(u64 hash) {
+  TTableBucket *bucket = &tt.buckets[hash & tt.mask];
+  return bucket;
+}
+
+// TODO: add parameters
 void init_tables() {
   {
     const u64 target_table_size_mib = 16; // 1mib = 1024 x 1024 bytes
@@ -297,7 +336,9 @@ void init_tables() {
       n++;
     }
     tt.count = count;
-    tt.buckets = malloc(count * bucket_size_b);
+    tt.filled = 0;
+    tt.buckets = calloc(1, count * bucket_size_b);
+    tt.mask = count - 1;
     printf("info transposition table size %i mib\n",
            (int)(count * bucket_size_b / (1024 * 1024)));
     printf("info transposition table count %llu elements\n",
