@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 TranspositionTable tt;
 
@@ -93,8 +94,7 @@ void search(Board *board, Move *best_move, AtomicBool *stop_thinking,
     }
     if (*stop_thinking)
       return;
-    if (best_score_found)
-      (*best_move) = best_move_found;
+    (*best_move) = best_move_found;
     if (outfile) {
       // check for mate
       char score_string[64];
@@ -128,11 +128,48 @@ void search(Board *board, Move *best_move, AtomicBool *stop_thinking,
       }
       double npms = (double)nodes_searched / (double)execution_time_ms;
       double nps = npms * 1000;
-      double hashfull = 1000000.0 * (double)tt.filled / (double)tt.count;
-      fprintf(outfile,
-              "info depth %i score %s nodes %llu nps %i hashfull %i time %i\n",
-              ply_depth + 1, score_string, (unsigned long long)nodes_searched,
-              (int)nps, (int)hashfull, (int)execution_time_ms);
+      double hashfull = 1000.0 * (double)tt.filled / (double)tt.count;
+      char pv[8192];
+      pv[0] = '\0';
+      {
+        Move mv = best_move_found;
+        char buf[16];
+        int i = 0;
+        while (i < ply_depth + 1) {
+          MoveList legals = generate_all_legal_moves(board);
+          bool mv_is_legal = false;
+          for (int k = 0; k < legals.count; k++) {
+            if (mv == move_list_get(&legals, k)) {
+              mv_is_legal = true;
+              break;
+            }
+          }
+          if (!mv_is_legal) {
+            break;
+          }
+          move_to_string(mv, buf);
+          board_make_move(board, mv);
+          sprintf(pv + strlen(pv), " %s", buf);
+          i++;
+          TTableBucket *bucket =
+              ttable_probe(board_metadata_peek(board, 0)->_hash);
+          if (bucket->hash == 0) {
+            break;
+          }
+          if (bucket->node_type != kPV) {
+            break;
+          }
+          mv = bucket->best_move;
+        }
+        for (int k = 0; k < i; k++) {
+          board_unmake(board);
+        }
+      }
+      fprintf(
+          outfile,
+          "info depth %i score %s nodes %llu nps %i hashfull %i time %i pv%s\n",
+          ply_depth + 1, score_string, (unsigned long long)nodes_searched,
+          (int)nps, (int)hashfull, (int)execution_time_ms, pv);
       if (mate) {
         // Stockfish does keep outputting higher depths when mate found but not
         // sure if this is due to parallel search or something
@@ -158,7 +195,7 @@ Centipawns qsearch(Board *board, Centipawns alpha, Centipawns beta,
   MoveList capture_moves = generate_capture_moves(board);
   for (int i = 0; i < capture_moves.count; i++) {
     if (*stop) {
-      break;
+      return alpha;
     }
     Move mv = move_list_get(&capture_moves, i);
     board_make_move(board, mv);
@@ -182,25 +219,28 @@ Centipawns search_recursive(SearchArguments args) {
   (*args.nodes_searched)++;
   Move tt_move = 0;
   u64 hash = board_metadata_peek(args.board, 0)->_hash;
-  TTableBucket *bucket = ttable_probe(hash);
-  if (bucket->hash == hash) {
-    tt_move = bucket->best_move;
-    if (bucket->depth >= args.ply_depth) {
-      switch (bucket->node_type) {
+  TTableBucket *bucket_ptr = ttable_probe(hash);
+  TTableBucket bucket_prev = *bucket_ptr;
+  TTableBucket bucket = *bucket_ptr;
+  if (bucket.hash == hash) {
+    tt_move = bucket.best_move;
+    if (bucket.depth >= args.ply_depth) {
+      switch (bucket.node_type) {
       case kCut:
-        args.alpha = max(args.alpha, bucket->score);
+        args.alpha = max(args.alpha, bucket.score);
         break;
       case kAll:
-        args.beta = min(args.beta, bucket->score);
+        args.beta = min(args.beta, bucket.score);
         break;
       case kPV: {
-        return bucket->score;
+        return bucket.score;
       }
       }
       if (args.alpha >= args.beta) {
         return args.beta;
       }
-      return bucket->score; // i think we want to return here no matter what
+      // do we need this?
+      return bucket.score;
     }
   }
   i32 status = board_status(args.board);
@@ -212,21 +252,23 @@ Centipawns search_recursive(SearchArguments args) {
     return 0; // TODO: contempt factor
   }
   if (args.ply_depth == 0) {
-    return qsearch(args.board, args.alpha, args.beta, args.stop);
+    Centipawns qscore = qsearch(args.board, args.alpha, args.beta, args.stop);
+    return qscore;
   }
-  // IDK WHY WE START INSERTING AFTER HERE???
+  // WHY DO WE START INSERTING AFTER HERE???
   // surely we want to store leaf results??
-  if (bucket->hash == 0) {
+  if (bucket.hash == 0) {
     tt.filled += 1;
   }
-  bucket->hash = hash;
-  bucket->depth = args.ply_depth;
+  bucket.hash = hash;
+  bucket.depth = args.ply_depth;
   MoveList legal_moves = generate_all_legal_moves(args.board);
   ScoredMoveList moves_scored;
   moves_scored.count = 0;
   for (i32 i = 0; i < legal_moves.count; i++) {
     Move mv = move_list_get(&legal_moves, i);
     u32 mv_md = move_get_metadata(mv);
+    u64 src = move_get_src(mv);
     i32 score = 0;
     if (mv == tt_move) {
       score += 1000;
@@ -237,19 +279,22 @@ Centipawns search_recursive(SearchArguments args) {
     if (mv_md & CAPTURE_BIT_FLAG) {
       score += 100;
     }
+    if (src & args.board->_bitboard[kPawn]) {
+      score += 10;
+    }
     moves_scored.items[moves_scored.count].mv = mv;
     moves_scored.items[moves_scored.count].score = score;
     moves_scored.items[moves_scored.count].valid = true;
     moves_scored.count++;
   }
-  bucket->best_move = peep_max(&moves_scored);
-  bucket->node_type = kAll;
+  bucket.best_move = peep_max(&moves_scored);
+  bucket.node_type = kAll; // Default is all-node, an upper bound, where exact
+                           // score might be lower No move raises alpha
   for (int i = 0; i < legal_moves.count; i++) {
     if (*args.stop) {
-      // we don't care about the result here
-      break;
+      return args.alpha;
     }
-    Move mv = pop_max(&moves_scored); // move_list_get(&legal_moves, i);
+    Move mv = pop_max(&moves_scored);
     board_make_move(args.board, mv);
     SearchArguments sub_args;
     sub_args.board = args.board;
@@ -263,18 +308,25 @@ Centipawns search_recursive(SearchArguments args) {
     if (score >= args.beta) {
       // this is a Cut-node
       // we return a lower bound; the exact score might be higher
-      bucket->node_type = kCut;
-      bucket->best_move = mv;
-      bucket->score = args.beta;
-      return args.beta;
+      bucket.node_type = kCut;
+      bucket.best_move = mv;
+      args.alpha = args.beta;
+      // bucket.score = args.beta;
+      break;
+      //(*bucket_ptr) = bucket;
+      // return args.beta;
     }
     if (score > args.alpha) {
-      bucket->node_type = kPV;
-      bucket->best_move = mv;
+      bucket.node_type = kPV;
+      bucket.best_move = mv;
       args.alpha = score;
     }
   }
-  bucket->score = args.alpha;
+  bucket.score = args.alpha;
+  bool eviction_cond = bucket_prev.node_type != kPV || bucket_prev.hash == 0;
+  if (eviction_cond) {
+    (*bucket_ptr) = bucket;
+  }
   return args.alpha;
 }
 

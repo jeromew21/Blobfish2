@@ -11,9 +11,9 @@ typedef int32_t Centipawns;
 static const Centipawns MIN_EVAL = -1000000;
 
 enum NodeType {
-  kPV,
-  kCut,
-  kAll,
+  kPV = 1,
+  kCut = 2,
+  kAll = 3,
 };
 
 typedef struct TTableBucket {

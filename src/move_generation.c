@@ -11,6 +11,8 @@ typedef u32 (*bitscan_function)(u64);
 
 MoveList generate_all_pseudo_legal_moves(Board *board);
 
+u32 pop_lsb();
+
 /**
  * TODO: optimize
  */

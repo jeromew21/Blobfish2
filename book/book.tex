@@ -275,9 +275,10 @@ we efficiently implement it in our engine?
 
 \section{Transposition Tables}
 
-At this point, I ran 1000 games of the engine versus Stockfish set to an ELO limited to 1320. The results concluded that the engine's ELO is ~1200.
-
-A couple major issues is that it falls for repetitions, and also does not distinguish between Mate-in-N. Furthermore, on short time controls (say 1 second per move) it often fails to find good moves, because it can't calculate deep enough in such a small time. These will both be covered in later chapters.
+If you've played versus the engine, you'll notice that 
+it falls for repetitions, and also does not distinguish 
+between Mate-in-N. Furthermore, on short time controls 
+(say 1 second per move) it often fails to find good moves, because it can't calculate deep enough in such a small time. These will both be covered in later chapters.
 
 We would a way to place our board state into a hash table, in order to memoize previous search results. This should speed up our search at the expense of some space.
 The process of doing so ends up being somewhat tricky, but will have more benefits than just optimization. For one, having a board state hashing function 
@@ -333,9 +334,14 @@ Here, we can kill two birds with one stone: 1) we can report out mate-in-N to th
 distinguish in our search between distance to mate.
 
 At a leaf node which is mate, we want to output a mating score, which should be higher
-the closer the mate is.
+the closer the mate is. We want to know how far from our original search node we 
+are in order to report how many moves to mate. When in the 
+checkmating node, we store how far we are from the root. Closer is better, and closer 
+scores correspond to greater scores.
 
 \subsection{Recovering Principal Variation}
+
+Reporting the PV is tricky.
 
 \subsection{Engine Options}
 

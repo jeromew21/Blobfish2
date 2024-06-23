@@ -10,6 +10,10 @@
 #include <string.h>
 #include <time.h>
 
+#ifdef __linux__
+#include <valgrind/callgrind.h>
+#endif
+
 static const char *ENGINE_NAME = "Blobfish2";
 
 static const char *ENGINE_VERSION = "0.0.1";
@@ -97,7 +101,17 @@ void *think_timer(void *_unused) {
 
 void *think(void *_unused) {
   (void)_unused;
+
+#ifdef __linux__
+  CALLGRIND_START_INSTRUMENTATION;
+  CALLGRIND_TOGGLE_COLLECT;
+#endif
   search(ctx->board, &ctx->best_move, &ctx->stop_thinking, stdout);
+#ifdef __linux__
+  CALLGRIND_TOGGLE_COLLECT;
+  CALLGRIND_STOP_INSTRUMENTATION;
+#endif
+
   char move_buf[16];
   move_to_string(ctx->best_move, move_buf);
   printf("bestmove %s\n", move_buf);

@@ -73,7 +73,7 @@ EvaluationVector evaluation_vector(Board *board) {
 
 Centipawns evaluation(Board *board) {
   static const f64 weights[FEATURE_COUNT] = {
-      1.0, 20.0, 20.0, 20.0, 1.0,
+      1.0, 1.0, 1.0, 1.0, 1.0,
   };
   EvaluationVector vec = evaluation_vector(board);
   f64 score = 0;
