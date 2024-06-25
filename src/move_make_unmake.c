@@ -284,10 +284,7 @@ void board_make_move(Board *board, Move mv) {
             return;
         }
         const u64 current_hash = md->_hash;
-        if (md->_is_irreversible_move) {
-            return;
-        }
-        if (board->_ply >= 1 && board->_state_stack[board->_ply - 1]._is_irreversible_move) {
+        if (md->_is_irreversible_move || prev_md->_is_irreversible_move) {
             return;
         }
         for (int i = (int) board->_ply - 3; i >= 0; i -= 2) {
