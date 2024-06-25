@@ -14,7 +14,6 @@
 #include <valgrind/callgrind.h>
 #endif
 
-
 #if defined(_WIN32) || defined(WIN32)
 void THREAD_CREATE(THREAD* t, void* attr, LPTHREAD_START_ROUTINE f, void*arg) {
     (void)attr;
@@ -137,6 +136,7 @@ think(void *_unused) {
   move_to_string(ctx->best_move, move_buf);
   printf("bestmove %s\n", move_buf);
   ctx->stop_thinking = true;
+  // TODO: ponder
   return 0;
 }
 
@@ -201,7 +201,7 @@ void command_stop(char *line_buffer) {
 
 void command_perft(char *line_buffer) {
   (void)line_buffer;
-  // TODO: perft command
+  // TODO: perft command for position
   // printf("perft %s\n", line_buffer);
 }
 
@@ -210,13 +210,14 @@ void command_ucinewgame(char *line_buffer) {
   // not sure if this is meaningful for us
   // maybe the idea is that we clear hash tables and any other saved state from
   // the previous game
-  // probably safe to ignore
+  // safe to ignore for now
 }
 
 void command_isready(char *line_buffer) {
   (void)line_buffer;
   // This might be called if there's a blocking operation on the entire engine.
   // Given example is loading tablebases.
+  // Not interesting for now.
   printf("readyok\n");
 }
 

@@ -3,10 +3,6 @@
 #include "chess.h"
 #include <stdio.h>
 
-/*
- * Threading abstraction. We might have to use a function macro or define
- * functions for create/join based on what the Windows API looks like.
- */
 #if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
 #include <stdatomic.h>
 #include <pthread.h>
