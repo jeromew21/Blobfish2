@@ -23,9 +23,9 @@ void hashing_test() {
   const u64 hashmap_count = (u64)1 << 16;
   const u64 hashmap_size_bytes = sizeof(TestHashMapElement) * hashmap_count;
   const u64 mask = MASK;
-  printf("Mask: %lu\n", mask);
-  printf("Max element count: %lu\n", hashmap_count);
-  printf("Hashmap size (bytes): %lu\n", hashmap_size_bytes);
+  printf("Mask: %lu\n", (unsigned long)mask);
+  printf("Max element count: %lu\n", (unsigned long)hashmap_count);
+  printf("Hashmap size (bytes): %lu\n", (unsigned long)hashmap_size_bytes);
   TestHashMap map;
   map.count = hashmap_count;
   map.elements = calloc(1, hashmap_size_bytes);

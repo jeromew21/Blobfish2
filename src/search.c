@@ -39,9 +39,9 @@ Move pop_max(ScoredMoveList *scored_moves);
 
 Move peek_max(ScoredMoveList *scored_moves);
 
-Centipawns min(Centipawns x, Centipawns y) { return x < y ? x : y; }
+Centipawns min_cp(Centipawns x, Centipawns y) { return x < y ? x : y; }
 
-Centipawns max(Centipawns x, Centipawns y) { return x > y ? x : y; }
+Centipawns max_cp(Centipawns x, Centipawns y) { return x > y ? x : y; }
 
 /**
  * Root search
@@ -133,11 +133,11 @@ void search(Board *board, Move *best_move, AtomicBool *stop_thinking,
             // leaf.depth
             if (best_score_found > 0) {
                 int plies = -MIN_EVAL - best_score_found;
-                int moves_to_mate = ceil(((double) (plies - board->_ply)) / 2.0);
+                int moves_to_mate = (int)ceil(((double) (plies - board->_ply)) / 2.0);
                 sprintf(score_string, "mate %i", moves_to_mate);
             } else {
                 int plies = best_score_found - MIN_EVAL;
-                int moves_to_mate = ceil(((double) (plies - board->_ply)) / 2.0);
+                int moves_to_mate = (int)ceil(((double) (plies - board->_ply)) / 2.0);
                 sprintf(score_string, "mate -%i", moves_to_mate);
             }
             mate = true;
@@ -257,10 +257,10 @@ Centipawns search_recursive(SearchArguments args) {
         if (bucket.depth >= args.ply_depth) {
             switch (bucket.node_type) {
                 case kCut:
-                    args.alpha = max(args.alpha, bucket.score);
+                    args.alpha = max_cp(args.alpha, bucket.score);
                     break;
                 case kAll:
-                    args.beta = min(args.beta, bucket.score);
+                    args.beta = min_cp(args.beta, bucket.score);
                     break;
                 case kPV: {
                     return bucket.score;
@@ -291,7 +291,7 @@ Centipawns search_recursive(SearchArguments args) {
         tt.filled += 1;
     }
     bucket.hash = hash;
-    bucket.depth = args.ply_depth;
+    bucket.depth = (u8)args.ply_depth;
     MoveList legal_moves = generate_all_legal_moves(args.board);
     ScoredMoveList scored_moves;
     scored_moves.count = 0;

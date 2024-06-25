@@ -88,7 +88,7 @@ void board_dump(Board *board) {
            rights & kBlackQueenSideFlag ? "no" : "yes");
   }
   {
-    printf("Hash: 0x%lx\n", md->_hash);
+    printf("Hash: 0x%lx\n", (unsigned long)md->_hash);
     printf("Repetition: ");
     for (int ply = 0; ply < (int)board->_ply; ply++) {
       printf("%i", (int)board->_state_stack[ply]._is_repetition);

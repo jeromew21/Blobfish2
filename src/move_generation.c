@@ -142,8 +142,8 @@ MoveList generate_all_pseudo_legal_moves(Board *board) {
   const u64 pawns = friendly_mask & board->_bitboard[kPawn];
   if (pawns) {
     const u64 empty_mask = ~occupancy_mask;
-    const u64 not_a_file = ~0x0101010101010101;
-    const u64 not_h_file = ~0x8080808080808080;
+    const u64 not_a_file = (u64) ~0x0101010101010101;
+    const u64 not_h_file = (u64) ~0x8080808080808080;
     const u64 last_rank = 0xFF000000000000FF;
     const u32 ep_idx =
         board_metadata_get_en_passant_square(board_metadata_peek(board, 0));
@@ -337,8 +337,8 @@ i32 attacker_count(u64 bitset, u64 *bitboards, i32 attacking_color) {
  * TODO: verify this works for *entire* pawn set and not only single bitset?
  */
 u64 pawn_attacks(u64 source_bitset, i32 side) {
-  const u64 not_a_file = ~0x0101010101010101;
-  const u64 not_h_file = ~0x8080808080808080;
+  const u64 not_a_file = (u64)~0x0101010101010101;
+  const u64 not_h_file = (u64)~0x8080808080808080;
   if (side == kWhite) {
     return ((source_bitset << 9) & not_a_file) |
            ((source_bitset << 7) & not_h_file);

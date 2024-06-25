@@ -14,6 +14,18 @@
 #include <valgrind/callgrind.h>
 #endif
 
+
+#if defined(_WIN32) || defined(WIN32)
+void THREAD_CREATE(THREAD* t, void* attr, LPTHREAD_START_ROUTINE f, void*arg) {
+    (void)attr;
+    *t = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) f, arg, 0, NULL);
+}
+
+void THREAD_DETACH(THREAD t) {
+    CloseHandle(t);
+}
+#endif
+
 static const char *ENGINE_NAME = "Blobfish2";
 
 static const char *ENGINE_VERSION = "0.0.1";
@@ -77,7 +89,12 @@ void engine_command(char *line_buffer) {
 #undef COMMAND_COUNT
 }
 
-void *think_timer(void *_unused) {
+#if defined(_WIN32) || defined(WIN32)
+DWORD WINAPI
+#else
+void *
+#endif
+think_timer(void *_unused) {
   (void)_unused;
   const u64 think_ms = (u64)ctx->think_time_ms - 1; // buffer by 1 ms... enough?
   struct timespec start;
@@ -95,10 +112,15 @@ void *think_timer(void *_unused) {
       break;
     }
   }
-  return NULL;
+  return 0;
 }
 
-void *think(void *_unused) {
+#if defined(_WIN32) || defined(WIN32)
+DWORD WINAPI
+#else
+void *
+#endif
+think(void *_unused) {
   (void)_unused;
 
 #ifdef __linux__
@@ -115,7 +137,7 @@ void *think(void *_unused) {
   move_to_string(ctx->best_move, move_buf);
   printf("bestmove %s\n", move_buf);
   ctx->stop_thinking = true;
-  return NULL;
+  return 0;
 }
 
 void command_go(char *line_buffer) {
@@ -291,7 +313,7 @@ void engine_cleanup(void) {
 bool board_make_move_from_alg(Board *board, const char *algebraic) {
   static char row_names[8] = {'1', '2', '3', '4', '5', '6', '7', '8'};
   static char col_names[8] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'};
-  u32 r0, c0, r1, c1;
+  u32 r0 = 0, c0 = 0, r1 = 0, c1 = 0;
   for (u32 i = 0; i < 8; i++) {
     if (algebraic[0] == col_names[i])
       c0 = i;
@@ -325,7 +347,7 @@ bool board_make_move_from_alg(Board *board, const char *algebraic) {
   u32 idx_src = r0 * 8 + c0;
   u32 idx_dest = r1 * 8 + c1;
   MoveList moves = generate_all_legal_moves(board);
-  Move mv;
+  Move mv = 0;
   bool found = false;
   for (int i = 0; i < moves.count; i++) {
     Move candidate = move_list_get(&moves, i);

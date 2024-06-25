@@ -1,8 +1,33 @@
 #include "chess.h"
 
-// note that these builtins aren't portable.
-// there might be a different builtin somewhere
-// there is a way to drop into assembly but not sure if that's a good idea
+#if defined(_WIN32) || defined(WIN32)
+#include <intrin.h>
+
+/**
+ * Get index of first set bit from least significant direction.
+ * https://www.chessprogramming.org/BitScan#x86
+ */
+u32 bitscan_forward(u64 bitset) {
+    unsigned long index;
+    _BitScanForward64(&index, bitset);
+    return (int) index;
+}
+
+/**
+ * Get index of first set bit but from more significant side.
+ */
+u32 bitscan_reverse(u64 bitset) {
+    unsigned long index;
+    _BitScanReverse64(&index, bitset);
+    return (int) index;
+}
+
+/**
+ * Get number of bit set to 1 in the bitset.
+ */
+i32 pop_count(u64 bitset) { return (i32)__popcnt64(bitset); }
+
+#else
 
 /**
  * Get index of first set bit from least significant direction.
@@ -19,6 +44,8 @@ u32 bitscan_reverse(u64 bitset) { return 63 - __builtin_clzll(bitset); }
  * Get number of bit set to 1 in the bitset.
  */
 i32 pop_count(u64 bitset) { return __builtin_popcountll(bitset); }
+
+#endif
 
 /**
  * For magics generation

@@ -4,7 +4,9 @@ build-release
 build-debug
 venv
 cmake-build-debug
+cmake-build-debug-visual-studio
 cmake-build-release
+cmake-build-release-visual-studio
 .bak
 .idea
 .DS_Store

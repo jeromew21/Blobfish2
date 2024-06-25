@@ -1,7 +1,6 @@
 #pragma once
 
 #include "chess.h"
-#include <stdatomic.h>
 #include <stdio.h>
 
 /*
@@ -9,14 +8,19 @@
  * functions for create/join based on what the Windows API looks like.
  */
 #if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
-#include "pthread.h"
+#include <stdatomic.h>
+#include <pthread.h>
 #define THREAD pthread_t
 #define THREAD_CREATE pthread_create
 #define THREAD_JOIN pthread_join
 #define THREAD_DETACH pthread_detach
+typedef _Atomic(bool) AtomicBool;
 #elif defined(_WIN32) || defined(WIN32)
-#include "windows.h"
-#define THREAD windows_thread_TODO
+#include <windows.h>
+typedef bool AtomicBool; // TODO: get atomics on Windows
+#define THREAD HANDLE
+void THREAD_CREATE(THREAD* t, void* attr, LPTHREAD_START_ROUTINE f, void*arg);
+void THREAD_DETACH(THREAD t);
 #endif
 
 typedef struct EngineContext {

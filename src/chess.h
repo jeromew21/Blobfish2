@@ -1,9 +1,17 @@
 #pragma once
 
-#include <stdatomic.h>
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+
+#if defined(_WIN32) || defined(WIN32)
+#include <windows.h>
+#include <time.h>
+#define CLOCK_MONOTONIC_RAW 0
+//struct timespec { long tv_sec; long tv_nsec; };
+int clock_gettime(int unused, struct timespec *spec);
+#endif
 
 /* https://www.chessprogramming.org/Square_Mapping_Considerations#LittleEndianRankFileMapping
  */
@@ -20,8 +28,6 @@ typedef uint8_t u8;
 typedef int32_t i32;
 
 typedef double f64;
-
-typedef _Atomic(bool) AtomicBool;
 
 static const i32 PROMOTION_BIT_FLAG = 0x8;
 

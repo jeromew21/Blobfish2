@@ -2,7 +2,6 @@
 
 #include "chess.h"
 #include "uci.h"
-#include <stdatomic.h>
 #include <stdbool.h>
 #include <stdint.h>
 
