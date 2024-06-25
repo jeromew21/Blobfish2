@@ -77,9 +77,9 @@ bool puzzle_test_line(const char *line, Board *board) {
   }
   think_ms = 100;
   stop_thinking = false;
-  THREAD think_timer_thread;
-  THREAD_CREATE(&think_timer_thread, NULL, puzzle_think_timer, (void *)NULL);
-  search(board, &best_move, &stop_thinking, NULL);
+  //THREAD think_timer_thread;
+  //THREAD_CREATE(&think_timer_thread, NULL, puzzle_think_timer, (void *)NULL);
+  search(board, &best_move, &stop_thinking, NULL, 5);
   char move_buf[16];
   move_to_string(best_move, move_buf);
   // printf("Found move: %s\n", move_buf);
@@ -92,7 +92,7 @@ bool puzzle_test_line(const char *line, Board *board) {
     result = false;
   }
   printf(" rating: %s\n", cells[Rating]);
-  THREAD_JOIN(think_timer_thread, NULL);
+  //THREAD_JOIN(think_timer_thread, NULL);
   return result;
 #undef FIELD_SIZE
 #undef FIELD_COUNT

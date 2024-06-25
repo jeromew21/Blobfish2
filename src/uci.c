@@ -74,7 +74,6 @@ void engine_command(char *line_buffer) {
       return;
     }
   }
-  printf("Unknown command `%s`.\n", command_name);
 #undef COMMAND_COUNT
 }
 
@@ -106,7 +105,7 @@ void *think(void *_unused) {
   CALLGRIND_START_INSTRUMENTATION;
   CALLGRIND_TOGGLE_COLLECT;
 #endif
-  search(ctx->board, &ctx->best_move, &ctx->stop_thinking, stdout);
+  search(ctx->board, &ctx->best_move, &ctx->stop_thinking, stdout, 8192);
 #ifdef __linux__
   CALLGRIND_TOGGLE_COLLECT;
   CALLGRIND_STOP_INSTRUMENTATION;

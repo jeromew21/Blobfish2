@@ -5,7 +5,7 @@
 #define FEATURE_COUNT 5
 
 typedef struct EvaluationVector {
-  Centipawns features[FEATURE_COUNT];
+  f64 features[FEATURE_COUNT];
 } EvaluationVector;
 
 typedef f64 (*evaluate_function)(Board *, i32);
@@ -73,7 +73,7 @@ EvaluationVector evaluation_vector(Board *board) {
 
 Centipawns evaluation(Board *board) {
   static const f64 weights[FEATURE_COUNT] = {
-      1.0, 1.0, 1.0, 1.0, 1.0,
+      1.0, 6.0, 6.0, 5.0, 25.0,
   };
   EvaluationVector vec = evaluation_vector(board);
   f64 score = 0;
@@ -93,8 +93,6 @@ f64 evaluate_bishop_mobility(Board *board, i32 color) {
   i32 bishop_count = pop_count(bishops);
   while (bishops) {
     u32 bishop_idx = bitscan_forward(bishops);
-    // For sliding pieces, we can add times they attack own pieces (i.e.)
-    // protect.
     mobility += pop_count(bishop_moves(bishop_idx, occupancy_mask));
     bishops ^= (u64)1 << bishop_idx;
   }
@@ -111,8 +109,6 @@ f64 evaluate_rook_mobility(Board *board, i32 color) {
   i32 rook_count = pop_count(rooks);
   while (rooks) {
     u32 rook_idx = bitscan_forward(rooks);
-    // For sliding pieces, we can add times they attack own pieces (i.e.)
-    // protect.
     mobility += pop_count(rook_moves(rook_idx, occupancy_mask));
     rooks ^= (u64)1 << rook_idx;
   }
@@ -149,7 +145,6 @@ f64 evaluate_material(Board *board, i32 color) {
 
 f64 evaluate_king_pawn_shield(Board *board, i32 color) {
   const u64 king = board->_bitboard[color] & board->_bitboard[kKing];
-  const u32 king_idx = bitscan_forward(king);
   const u64 rank1 = 0x00000000000000FF;
   const u64 rank8 = 0xFF00000000000000;
   const u64 a_file = 0x0101010101010101;
@@ -158,16 +153,15 @@ f64 evaluate_king_pawn_shield(Board *board, i32 color) {
   // maybe make a 64 bit table of king positions?
   // corner = better, center = worse
   const bool on_back_rank = king & rank;
-  u64 pawn_shield = king_moves(king_idx) & pawn_attacks(king, color) &
-                    pawn_forward_moves(king, color) & board->_bitboard[color] &
-                    board->_bitboard[kPawn];
+  u64 pawn_forward = pawn_attacks(king, color) | pawn_forward_moves(king, color);
+  u64 pawn_shield = pawn_forward & board->_bitboard[color] & board->_bitboard[kPawn];
   f64 pawn_shield_count = pop_count(pawn_shield);
   assert(pawn_shield_count <= 3);
   if (on_back_rank) {
     if (king & a_file || king & h_file) {
-      return 150.0 * pawn_shield_count; // 0, 150, 300
+      return 1.5 * pawn_shield_count; // 0, 150, 300
     }
-    return 100.0 * pawn_shield_count; // 0, 100, 200, 300
+    return 1.0 * pawn_shield_count; // 0, 100, 200, 300
   } else {
     return 0.0;
   }

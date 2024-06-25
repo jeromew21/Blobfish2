@@ -111,8 +111,6 @@ My preferred setup for writing C is CLion+Linux, though macOS works fine as well
 \newpage
 \part{Modeling Chess}
 
-At the end of this part, you will have a working chess engine that sits around 1800-2000 ELO. 
-
 \section{Project Setup}
 
 Let's set up the environment.
@@ -341,7 +339,8 @@ scores correspond to greater scores.
 
 \subsection{Recovering Principal Variation}
 
-Reporting the PV is tricky.
+Reporting the PV is tricky to get exactly right. There are certain advantages to 
+having an entire table dedicated to the PV, but for our purposes we won't be implementing one.
 
 \subsection{Engine Options}
 
@@ -359,6 +358,8 @@ excellent move ordering are more in line with this section than the previous.
 
 \subsection{Static Exchange Evaluation}
 \subsection{Killer Move}
+A killer move is a quiet move that causes a beta cutoff.
+We have to create a bespoke table for the killer move.
 \subsection{Exercises}
 
 
