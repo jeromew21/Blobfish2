@@ -200,10 +200,7 @@ void search(Board *board, Move *best_move, AtomicBool *stop_thinking,
             // there's a bug here, sometimes it doesn't return
             // it bugs out and even sometimes hangs GUI
             // rn, we have a constant check, but this isn't correct
-            // i think the bug source is, a threefold repetition is evaluated as 0, but
-            // the actual board legal moves continues to grow and we get a stupidly long PV.
-            // we need to stop generating moves after a threefold, basically. This would be easy to implement.
-            // or treat it similarly to mate (stop searching)
+            // not sure what the bug issue is
             return;
         }
         ply_depth++;
@@ -223,11 +220,38 @@ Centipawns qsearch(Board *board, Centipawns alpha, Centipawns beta,
         alpha = stand_pat;
     }
     MoveList capture_moves = generate_capture_moves(board);
+    ScoredMoveList scored_capture_moves;
+    scored_capture_moves.count = 0;
+    for (int i = 0; i < capture_moves.count; i++) {
+        // score based on MVV-LVA
+        Move mv = move_list_get(&capture_moves, i);
+        u64 mv_src = move_get_src(mv);
+        u64 mv_dest = move_get_dest(mv);
+        i32 attacker = 0;
+        i32 victim = 0;
+        for (i32 p = kPawn; p <= kQueen; p++) {
+            if (mv_src & board->_bitboard[p] & board->_bitboard[board->_turn]) {
+                attacker = p;
+            }
+            if (mv_dest & board->_bitboard[p] & board->_bitboard[!board->_turn]) {
+                victim = p;
+            }
+        }
+        if (move_get_metadata(mv) == kEnPassantMove) {
+            victim = kPawn;
+        }
+        const i32 score = (victim * 10) + (10-attacker);
+        scored_capture_moves.items[scored_capture_moves.count].mv = mv;
+        scored_capture_moves.items[scored_capture_moves.count].score = score;
+        scored_capture_moves.items[scored_capture_moves.count].valid = true;
+        scored_capture_moves.count++;
+    }
     for (int i = 0; i < capture_moves.count; i++) {
         if (*stop) {
             return alpha;
         }
-        Move mv = move_list_get(&capture_moves, i);
+        Move mv = //move_list_get(&capture_moves, i);
+                pop_max(&scored_capture_moves);
         board_make_move(board, mv);
         Centipawns score = -qsearch(board, -beta, -alpha, stop);
         board_unmake(board);
@@ -427,10 +451,10 @@ void init_tables(void) {
         tt.filled = 0;
         tt.buckets = calloc(1, count * bucket_size_b);
         tt.mask = count - 1;
-        printf("info transposition table size %i mib\n",
-               (int) (count * bucket_size_b / (1024 * 1024)));
-        printf("info transposition table count %llu buckets\n",
-               (long long unsigned) tt.count);
+//        printf("info transposition table size %i mib\n",
+//               (int) (count * bucket_size_b / (1024 * 1024)));
+//        printf("info transposition table count %llu buckets\n",
+//               (long long unsigned) tt.count);
     }
     {
         killer_table.count = (u64) 1 << 16;

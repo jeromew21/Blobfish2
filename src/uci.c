@@ -215,7 +215,7 @@ void command_ucinewgame(char *line_buffer) {
 
 void command_isready(char *line_buffer) {
   (void)line_buffer;
-  // This might be called if there's a blocking operation on the entire engine.
+  // This might be needed if there's a blocking operation on the entire engine (?).
   // Given example is loading tablebases.
   // Not interesting for now.
   printf("readyok\n");
@@ -223,6 +223,7 @@ void command_isready(char *line_buffer) {
 
 void command_quit(char *line_buffer) {
   (void)line_buffer;
+  ctx->stop_thinking = true;
   ctx->quit = true;
 }
 
@@ -298,6 +299,7 @@ void engine_initialize(void) {
   ctx->log_fp = fopen("log.txt", "a");
   init_tables();
   fprintf(ctx->log_fp, "INFO: started new %s instance\n", ENGINE_NAME);
+  fprintf(stdout, "%s %s\n", ENGINE_NAME, ENGINE_VERSION);
 }
 
 void engine_cleanup(void) {

@@ -1,6 +1,7 @@
 #include "bitboard_constants.h"
 #include "chess.h"
 #include <stdbool.h>
+#include <stdlib.h>
 
 /*Intrinsics not working on Mac
     TODO: try using on Linux
@@ -15,8 +16,9 @@ u32 pop_lsb();
 
 /**
  * TODO: optimize
+ * this is an important bottleneck in qsearch
  */
-MoveList generate_capture_moves(Board *board) {
+MoveList generate_capture_moves_old(Board *board) {
   MoveList captures = move_list_create();
   MoveList legal = generate_all_legal_moves(board);
   for (int i = 0; i < legal.count; i++) {
@@ -29,7 +31,164 @@ MoveList generate_capture_moves(Board *board) {
   return captures;
 }
 
-// TODO: optimize
+MoveList generate_capture_moves(Board *board) {
+    MoveList move_list = move_list_create();
+    const u64 friendly_mask = board->_bitboard[board->_turn];
+    const u64 enemy_mask = board->_bitboard[!board->_turn];
+    const u64 occupancy_mask = friendly_mask | enemy_mask;
+    // Knights
+    // https://www.chessprogramming.org/Knight_Pattern
+    // TODO: use conditional AVX instructions if possible
+    // hitting static data might be slow, idk
+    // Or even just shifting/adding offset
+    // must measure
+    u64 knights = friendly_mask & board->_bitboard[kKnight];
+    while (knights) {
+        const u32 idx = bitscan_forward(knights);
+        u64 jumps = knight_moves(idx) & enemy_mask;
+        while (jumps) {
+            const u32 dest_idx = bitscan_forward(jumps);
+            const u64 dest_bit = (u64)1 << dest_idx;
+            const u32 md = (dest_bit & enemy_mask) ? kCaptureMove : kQuietMove;
+            const Move mv = move_create(idx, dest_idx, md);
+            move_list_push(&move_list, mv);
+            jumps ^= dest_bit;
+        }
+        knights ^= (u64)1 << idx;
+    }
+    const u64 king = friendly_mask & board->_bitboard[kKing];
+    // Same note as for Knights w.r.t. optimization
+    if (king) { // technically this check isn't needed for legal positions
+        const u32 king_idx = bitscan_forward(king);
+        u64 king_move_bitset = king_moves(king_idx) & enemy_mask;
+        while (king_move_bitset) {
+            const u32 dest_idx = bitscan_forward(king_move_bitset);
+            const u64 dest_bit = (u64)1 << dest_idx;
+            const u32 md = (dest_bit & enemy_mask) ? kCaptureMove : kQuietMove;
+            const Move mv = move_create(king_idx, dest_idx, md);
+            move_list_push(&move_list, mv);
+            king_move_bitset ^= dest_bit;
+        }
+    }
+    // Pawns
+    const u64 pawns = friendly_mask & board->_bitboard[kPawn];
+    if (pawns) {
+        const u64 not_a_file = (u64) ~0x0101010101010101;
+        const u64 not_h_file = (u64) ~0x8080808080808080;
+        const u64 last_rank = 0xFF000000000000FF;
+        const u32 ep_idx =
+                board_metadata_get_en_passant_square(board_metadata_peek(board, 0));
+        const u64 en_passant_square = ep_idx == 0 ? 0 : (u64)1 << ep_idx;
+        u64 pawn_east_attacks;
+        u64 pawn_west_attacks;
+        // push
+        i32 east_offset;
+        i32 west_offset;
+        if (board->_turn == kWhite) {
+            pawn_east_attacks =
+                    ((pawns << 9) & not_a_file) & (en_passant_square | enemy_mask);
+            pawn_west_attacks =
+                    ((pawns << 7) & not_h_file) & (en_passant_square | enemy_mask);
+            east_offset = -9;
+            west_offset = -7;
+        } else {
+            pawn_east_attacks =
+                    ((pawns >> 7) & not_a_file) & (en_passant_square | enemy_mask);
+            pawn_west_attacks =
+                    ((pawns >> 9) & not_h_file) & (en_passant_square | enemy_mask);
+            east_offset = 7;
+            west_offset = 9;
+        }
+        while (pawn_east_attacks) {
+            const u32 dest_idx = bitscan_forward(pawn_east_attacks);
+            const u32 src_idx = ((i32)dest_idx) + east_offset;
+            const u64 dest_bit = (u64)1 << dest_idx;
+            if (dest_bit & last_rank) {
+                move_list_push(&move_list, move_create(src_idx, dest_idx,
+                                                       kQueenCapturePromotionMove));
+                move_list_push(&move_list, move_create(src_idx, dest_idx,
+                                                       kBishopCapturePromotionMove));
+                move_list_push(&move_list, move_create(src_idx, dest_idx,
+                                                       kKnightCapturePromotionMove));
+                move_list_push(&move_list, move_create(src_idx, dest_idx,
+                                                       kRookCapturePromotionMove));
+            } else {
+                const u32 flags =
+                        (dest_bit & en_passant_square) ? kEnPassantMove : kCaptureMove;
+                move_list_push(&move_list, move_create(src_idx, dest_idx, flags));
+            }
+            pawn_east_attacks ^= dest_bit;
+        }
+        while (pawn_west_attacks) {
+            const u32 dest_idx = bitscan_forward(pawn_west_attacks);
+            const u32 src_idx = ((i32)dest_idx) + west_offset;
+            const u64 dest_bit = (u64)1 << dest_idx;
+            if (dest_bit & last_rank) {
+                move_list_push(&move_list, move_create(src_idx, dest_idx,
+                                                       kQueenCapturePromotionMove));
+                move_list_push(&move_list, move_create(src_idx, dest_idx,
+                                                       kBishopCapturePromotionMove));
+                move_list_push(&move_list, move_create(src_idx, dest_idx,
+                                                       kKnightCapturePromotionMove));
+                move_list_push(&move_list, move_create(src_idx, dest_idx,
+                                                       kRookCapturePromotionMove));
+            } else {
+                u32 flags =
+                        (dest_bit & en_passant_square) ? kEnPassantMove : kCaptureMove;
+                move_list_push(&move_list, move_create(src_idx, dest_idx, flags));
+            }
+            pawn_west_attacks ^= dest_bit;
+        }
+    }
+    u64 bishops =
+            friendly_mask & (board->_bitboard[kBishop] | board->_bitboard[kQueen]);
+    while (bishops) {
+        const u32 src_idx = bitscan_forward(bishops);
+        u64 destinations = bishop_moves(src_idx, occupancy_mask) & enemy_mask;
+        while (destinations) {
+            const u32 dest_idx = bitscan_forward(destinations);
+            const u64 dest_bit = (u64)1 << dest_idx;
+            const u32 md = (dest_bit & enemy_mask) ? kCaptureMove : kQuietMove;
+            const Move mv = move_create(src_idx, dest_idx, md);
+            move_list_push(&move_list, mv);
+            destinations ^= dest_bit;
+        }
+        bishops ^= (u64)1 << src_idx;
+    }
+    u64 rooks =
+            friendly_mask & (board->_bitboard[kRook] | board->_bitboard[kQueen]);
+    while (rooks) {
+        const u32 src_idx = bitscan_forward(rooks);
+        u64 destinations = rook_moves(src_idx, occupancy_mask) & enemy_mask;
+        while (destinations) {
+            const u32 dest_idx = bitscan_forward(destinations);
+            const u64 dest_bit = (u64)1 << dest_idx;
+            const u32 md = (dest_bit & enemy_mask) ? kCaptureMove : kQuietMove;
+            const Move mv = move_create(src_idx, dest_idx, md);
+            move_list_push(&move_list, mv);
+            destinations ^= dest_bit;
+        }
+        rooks ^= (u64)1 << src_idx;
+    }
+    MoveList legal = move_list_create();
+    for (int i = 0; i < move_list.count; i++) {
+        u64 bitboards[8];
+        for (int k = 0; k < 8; k++) { // could be memcpy instead
+            bitboards[k] = board->_bitboard[k];
+        }
+        Move mv = move_list_get(&move_list, i);
+        bitboards_update(bitboards, board->_turn, mv);
+        if (!is_attacked(bitboards[board->_turn] & bitboards[kKing], bitboards,
+                         !board->_turn)) {
+            move_list_push(&legal, mv);
+        }
+    }
+    return legal;
+}
+
+/*
+ * TODO: optimize
+ */
 i32 board_legal_moves_count(Board *board) {
   MoveList legal = generate_all_legal_moves(board);
   return legal.count;
