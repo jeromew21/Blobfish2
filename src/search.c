@@ -229,7 +229,7 @@ Centipawns qsearch(Board *board, Centipawns alpha, Centipawns beta,
         u64 mv_dest = move_get_dest(mv);
         i32 attacker = 0;
         i32 victim = 0;
-        for (i32 p = kPawn; p <= kQueen; p++) {
+        for (i32 p = kPawn; p <= kKing; p++) {
             if (mv_src & board->_bitboard[p] & board->_bitboard[board->_turn]) {
                 attacker = p;
             }

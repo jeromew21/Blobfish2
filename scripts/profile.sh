@@ -1,3 +1,5 @@
 set -xe
-valgrind --tool=callgrind --instr-atstart=no --collect-atstart=no --callgrind-out-file=callgrind.out ./build/blobfish
+readonly outfile=callgrind.out
+valgrind --tool=callgrind --instr-atstart=no --collect-atstart=no --callgrind-out-file=${outfile} ./build/blobfish
 gprof2dot -f callgrind callgrind.out | dot -Tsvg -o output.svg
+rm ${outfile}
