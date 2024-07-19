@@ -10,6 +10,10 @@ void board_initialize_startpos(Board *board) {
       board, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", NULL);
 }
 
+
+//given board, generate fen
+//given board, generate sparse vector representation
+
 /**
  * Given a board state, return the hash of board's current position.
  */

@@ -1,7 +1,6 @@
 #include "bitboard_constants.h"
 #include "chess.h"
 #include <assert.h>
-#include <stdio.h>
 
 /**
  * Update hash based on piece movement. Don't update any other hash components.

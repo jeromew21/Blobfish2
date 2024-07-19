@@ -133,11 +133,11 @@ void search(Board *board, Move *best_move, AtomicBool *stop_thinking,
             // leaf.depth
             if (best_score_found > 0) {
                 int plies = -MIN_EVAL - best_score_found;
-                int moves_to_mate = (int)ceil(((double) (plies - board->_ply)) / 2.0);
+                int moves_to_mate = (int) ceil(((double) (plies - board->_ply)) / 2.0);
                 sprintf(score_string, "mate %i", moves_to_mate);
             } else {
                 int plies = best_score_found - MIN_EVAL;
-                int moves_to_mate = (int)ceil(((double) (plies - board->_ply)) / 2.0);
+                int moves_to_mate = (int) ceil(((double) (plies - board->_ply)) / 2.0);
                 sprintf(score_string, "mate -%i", moves_to_mate);
             }
             mate = true;
@@ -240,7 +240,7 @@ Centipawns qsearch(Board *board, Centipawns alpha, Centipawns beta,
         if (move_get_metadata(mv) == kEnPassantMove) {
             victim = kPawn;
         }
-        const i32 score = (victim * 10) + (10-attacker);
+        const i32 score = (victim * 10) + (10 - attacker);
         scored_capture_moves.items[scored_capture_moves.count].mv = mv;
         scored_capture_moves.items[scored_capture_moves.count].score = score;
         scored_capture_moves.items[scored_capture_moves.count].valid = true;
@@ -306,8 +306,7 @@ Centipawns search_recursive(SearchArguments args) {
         return 0; // TODO: contempt factor
     }
     if (args.ply_depth == 0) {
-        Centipawns qscore = qsearch(args.board, args.alpha, args.beta, args.stop);
-        return qscore;
+        return qsearch(args.board, args.alpha, args.beta, args.stop);
     }
     // WHY DO WE START INSERTING AFTER HERE???
     // do we want to store leaf results??
@@ -315,31 +314,38 @@ Centipawns search_recursive(SearchArguments args) {
         tt.filled += 1;
     }
     bucket.hash = hash;
-    bucket.depth = (u8)args.ply_depth;
+    bucket.depth = (u8) args.ply_depth;
     MoveList legal_moves = generate_all_legal_moves(args.board);
     ScoredMoveList scored_moves;
     scored_moves.count = 0;
     for (i32 i = 0; i < legal_moves.count; i++) {
         Move mv = move_list_get(&legal_moves, i);
-        u32 mv_md = move_get_metadata(mv);
         u64 src = move_get_src(mv);
         i32 score = 0;
         u64 masked_killer = ((u64) mv) & killer_table.mask;
         KillerTableBucket *killer_bucket = &killer_table.buckets[masked_killer];
+        if (src & CAPTURE_BIT_FLAG) {
+            u64 dest = move_get_dest(mv);
+            i32 attacker = 0;
+            i32 victim = 0;
+            for (i32 p = kPawn; p <= kKing; p++) {
+                if (src & args.board->_bitboard[p] & args.board->_bitboard[args.board->_turn]) {
+                    attacker = p;
+                }
+                if (dest & args.board->_bitboard[p] & args.board->_bitboard[!args.board->_turn]) {
+                    victim = p;
+                }
+            }
+            if (move_get_metadata(mv) == kEnPassantMove) {
+                victim = kPawn;
+            }
+            score = (victim * 10) + (10 - attacker);
+        }
         if (killer_bucket->root_distance == args.board->_ply && killer_bucket->mv == mv) {
-            score += 101;
+            score = 101;
         }
         if (mv == tt_move) {
-            score += 1000;
-        }
-        if (mv_md & PROMOTION_BIT_FLAG) {
-            score += 100;
-        }
-        if (mv_md & CAPTURE_BIT_FLAG) {
-            score += 100;
-        }
-        if (src & args.board->_bitboard[kPawn]) {
-            score += 10;
+            score = 1000;
         }
         scored_moves.items[scored_moves.count].mv = mv;
         scored_moves.items[scored_moves.count].score = score;
