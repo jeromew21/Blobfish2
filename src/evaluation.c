@@ -3,7 +3,7 @@
 #include <assert.h>
 #include <math.h>
 
-#define FEATURE_COUNT 6
+#define FEATURE_COUNT 4
 
 typedef struct EvaluationVector {
     f64 features[FEATURE_COUNT];
@@ -62,8 +62,7 @@ EvaluationVector evaluation_vector(Board *board) {
     // And so on and so on
     static const evaluate_function eval_functions[FEATURE_COUNT] = {
             evaluate_material, evaluate_bishop_mobility,
-            evaluate_knight_mobility, evaluate_rook_mobility,
-            evaluate_king_pawn_shield, evaluate_king_tropism,
+            evaluate_knight_mobility, evaluate_rook_mobility
     };
     // on game state but keep static const for now.
     EvaluationVector vec;
@@ -76,7 +75,7 @@ EvaluationVector evaluation_vector(Board *board) {
 
 Centipawns evaluation(Board *board) {
     static const f64 weights[FEATURE_COUNT] = {
-            1.0, 6.0, 6.0, 5.0, 25.0, 0.1
+            1.0, 2.0, 2.0, 2.0
     };
     EvaluationVector vec = evaluation_vector(board);
     f64 score = 0;

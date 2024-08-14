@@ -61,15 +61,17 @@ void command_dump(char *line_buffer);
 
 void command_help(char *line_buffer);
 
+void command_gen_data(char *line_buffer);
+
 void engine_command(char *line_buffer) {
-#define COMMAND_COUNT 11
+#define COMMAND_COUNT 12
   static char *commands[COMMAND_COUNT] = {
       "quit",    "test", "uci",  "perft", "position", "ucinewgame",
-      "isready", "go",   "stop", "dump",  "help"};
+      "isready", "go",   "stop", "dump",  "help", "gen"};
   static const cmd_func command_functions[COMMAND_COUNT] = {
       command_quit,     command_test,       command_uci,     command_perft,
       command_position, command_ucinewgame, command_isready, command_go,
-      command_stop,     command_dump,       command_help};
+      command_stop,     command_dump,       command_help, command_gen_data};
 
   fprintf(ctx->log_fp, "INFO: GUI command `%.*s`\n",
           (int)strlen(line_buffer) - 1, line_buffer);
@@ -225,6 +227,38 @@ void command_quit(char *line_buffer) {
   (void)line_buffer;
   ctx->stop_thinking = true;
   ctx->quit = true;
+}
+
+void command_gen_data(char *line_buffer) {
+    (void) line_buffer;
+    // Some parameter ideas:
+    // search depth
+    // what positions to choose
+    // also what to output: FEN or not fen
+    // probably not FEN because that takes relative a lot to parse
+    // we want to feed legal moves too I think
+    // idk
+    printf("generating data\n");
+    char arg_buffer[64];
+    char value_buffer[64];
+    // TODO: parameters
+    // - search depth
+    // - which positions to search (let's do random moves for our initial set, then do PGN parsing or MCTS
+    // create file
+    // search to limited depth (what positions?)
+    // write to file (text?)
+    // allow interruptions when writing (?)
+    FILE *fp = NULL;
+    fp = fopen("chess_data.bin", "a");
+    // somehow write binary data
+    // data format:
+    // struct
+    // magic
+    // value (centipawns??)
+    // let's do input: board state + legal moves, then centipawns
+    // perhaps bitboard + legal moves set?
+    // bitboard, turn, castling, en passant, and masked set of legal moves
+    fclose(fp);
 }
 
 void command_position(char *line_buffer) {
