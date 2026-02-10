@@ -11,7 +11,7 @@
 #include <time.h>
 
 #ifdef __linux__
-#include <valgrind/callgrind.h>
+// #include <valgrind/callgrind.h>
 #endif
 
 #if defined(_WIN32) || defined(WIN32)
@@ -125,13 +125,13 @@ think(void *_unused) {
   (void)_unused;
 
 #ifdef __linux__
-  CALLGRIND_START_INSTRUMENTATION;
-  CALLGRIND_TOGGLE_COLLECT;
+  //CALLGRIND_START_INSTRUMENTATION;
+  //CALLGRIND_TOGGLE_COLLECT;
 #endif
   search(ctx->board, &ctx->best_move, &ctx->stop_thinking, stdout, 8192);
 #ifdef __linux__
-  CALLGRIND_TOGGLE_COLLECT;
-  CALLGRIND_STOP_INSTRUMENTATION;
+  //CALLGRIND_TOGGLE_COLLECT;
+  //CALLGRIND_STOP_INSTRUMENTATION;
 #endif
 
   char move_buf[16];
@@ -239,8 +239,8 @@ void command_gen_data(char *line_buffer) {
     // we want to feed legal moves too I think
     // idk
     printf("generating data\n");
-    char arg_buffer[64];
-    char value_buffer[64];
+    //char arg_buffer[64];
+    //char value_buffer[64];
     // TODO: parameters
     // - search depth
     // - which positions to search (let's do random moves for our initial set, then do PGN parsing or MCTS
